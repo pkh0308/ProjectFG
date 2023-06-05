@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ public class StageController : MonoBehaviour
     [Header("플레이어 생성")]
     [SerializeField] GameObject playerPrefab;
     [SerializeField] Vector3 initialPlayerPos;
+    [SerializeField] Transform[] startPos;
 
     [Header("카메라 연출")]
     [SerializeField] CameraMove mainCamera;
@@ -17,15 +19,38 @@ public class StageController : MonoBehaviour
     Vector3 initialPos;
     [SerializeField] Vector3 goalPos;
 
+    // 싱글/멀티 여부
+    bool isSingleGame;
+
+    void Awake()
+    { 
+        isSingleGame = GameManager.Instance.IsSingleGame;
+    }
+
     void Start()
     {
-        // 현재 스테이지를 액티브 씬으로 설정한 후 플레이어 생성
+        // 현재 스테이지를 액티브 씬으로 설정 후 캐릭터 생성
         SceneController.SetActiveSceneToCurStage();
-        GameObject p = Instantiate(playerPrefab, initialPlayerPos, Quaternion.identity);
+        // null을 반환받았을 경우 예외 발생시킴
+        GameObject p = InstantiatePlayer() ?? throw new Exception("캐릭터 생성 실패");
 
         // 스테이지 보여주기 코루틴 실행
         initialPos = mainCamera.gameObject.transform.position;
         StartCoroutine(ShowStage(p.transform));
+    }
+
+    // 캐릭터 생성
+    // 멀티플레이의 경우 NetworkManager를 통해 생성
+    GameObject InstantiatePlayer()
+    {
+        GameObject p;
+
+        if (isSingleGame)
+            p = Instantiate(playerPrefab, initialPlayerPos, Quaternion.identity);
+        else
+            p = NetworkManager.Instance.InstantiateCharacter(startPos);
+
+        return p;
     }
 
     // 최초 스테이지 보여주기용 함수

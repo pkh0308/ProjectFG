@@ -5,11 +5,13 @@ using UnityEngine.SceneManagement;
 
 public class SceneController : MonoBehaviour
 {
-    [SerializeField] GameObject loadingScene;
+    [Header("Loading")]
+    [SerializeField] GameObject loadingScreen;
     [SerializeField] GameObject loadingCamera;
 
     public static SceneController Instance { get; private set; }
 
+    // 외부 호출용 전달자
     public static Action SetActiveSceneToCurStage;
 
     int curStageIdx;
@@ -19,6 +21,7 @@ public class SceneController : MonoBehaviour
     public enum SceneIndex
     {
         LOADING = 0,
+        TITLE,
         LOBBY,
         PLAYER,
         STAGE_01
@@ -29,9 +32,19 @@ public class SceneController : MonoBehaviour
         Instance = this;
         Application.targetFrameRate = 60;
         SetActiveSceneToCurStage = SetActiveScene;
+    }
 
-        loadingScene.SetActive(true);
-        LoadLobby();
+    void Start()
+    {
+        SceneManager.LoadSceneAsync((int)SceneIndex.TITLE, LoadSceneMode.Additive);
+    }
+
+    // 로비 입장 버튼
+    public void EnterLobby()
+    {
+        SceneManager.UnloadSceneAsync((int)SceneIndex.TITLE);
+        // 서버 연결 요청
+        NetworkManager.Instance.ConnectToServer();
     }
 
     // 액티브 씬 설정용 함수
@@ -51,29 +64,29 @@ public class SceneController : MonoBehaviour
     public void EnterStage(int stageIdx)
     {
         curStageIdx = stageIdx + 2;
-        loadingScene.SetActive(true);
+        loadingScreen.SetActive(true);
         SceneManager.UnloadSceneAsync((int)SceneIndex.LOBBY);
         StartCoroutine(Loading());
     }
 
     public void ExitStage()
     {
-        loadingScene.SetActive(true);
+        loadingScreen.SetActive(true);
         SceneManager.UnloadSceneAsync((int)SceneIndex.STAGE_01); // 추후 curStageIdx 이용하도록 수정할 것
         SceneManager.UnloadSceneAsync((int)SceneIndex.PLAYER);
         SceneManager.LoadScene((int)SceneIndex.LOBBY, LoadSceneMode.Additive);
-        loadingScene.SetActive(false);
+        loadingScreen.SetActive(false);
     }
 
     IEnumerator LoadingLobby()
     {
         //로비 씬 로드 대기
-        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.LOBBY, LoadSceneMode.Additive);
+        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.LOBBY, LoadSceneMode.Additive); Debug.Log("Loading...");
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
-        loadingScene.SetActive(false);
+        loadingScreen.SetActive(false);
         loadingCamera.SetActive(false);
         SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex((int)SceneIndex.LOBBY));
     }
@@ -96,6 +109,6 @@ public class SceneController : MonoBehaviour
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
-        loadingScene.SetActive(false);
+        loadingScreen.SetActive(false);
     }
 }

@@ -1,8 +1,9 @@
+using Photon.Pun;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player : MonoBehaviour
+public class PlayerForNetwork : MonoBehaviour
 {
     [Header("Player Move Ref")]
     [SerializeField] float moveSpeed;
@@ -28,7 +29,6 @@ public class Player : MonoBehaviour
     bool isPaused;
     Vector3 beforeRigidVel;
 
-
     // 발판 관련
     MovingPlatform movingPlat;
     RotatingPlatform rotatingPlat;
@@ -52,10 +52,17 @@ public class Player : MonoBehaviour
     }
     CurState curState;
 
+    // 네트워크 관련
+    PhotonView PV;
+    bool isMine;
+
     void Awake()
     {
         rigid = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+
+        PV = GetComponent<PhotonView>();
+        isMine = PV.IsMine;
     }
 
     void Start()
@@ -70,7 +77,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         // 일시정지 상태로 변경됨
-        if(GameManager.Instance.IsPaused && !isPaused)
+        if (GameManager.Instance.IsPaused && !isPaused)
         {
             isPaused = true;
             PlayerStop();
@@ -92,6 +99,10 @@ public class Player : MonoBehaviour
 
     void PlayerMove()
     {
+        // 내 캐릭터가 아니라면 패스
+        if (!isMine)
+            return;
+
         // 일시정지 상태나 넉백중이라면 패스
         if (GameManager.Instance.IsPaused || inKnuckBack)
             return;
@@ -112,7 +123,7 @@ public class Player : MonoBehaviour
         // 회전 발판 위일 경우
         if (rotatingPlat != null)
         {
-            rigid.MovePosition(rigid.position + moveVec + rotatingPlat.GetRotateVec(transform.position)); 
+            rigid.MovePosition(rigid.position + moveVec + rotatingPlat.GetRotateVec(transform.position));
             return;
         }
 
@@ -134,13 +145,17 @@ public class Player : MonoBehaviour
     // 슬라이딩 중이라면 스킵
     void OnJump()
     {
-        if (GameManager.Instance.IsPaused)
+        // 내 캐릭터가 아니라면 패스
+        if (!isMine)
+            return;
+        // 일시정지 중이라면 패스
+        if (isPaused)
             return;
 
         // 회전 초기화
         rigid.angularVelocity = Vector3.zero;
         // 슬라이딩 중이라면 스킵
-        if (curState == CurState.IsSliding) 
+        if (curState == CurState.IsSliding)
             return;
 
         // 점프 중이라면 슬라이딩
@@ -159,7 +174,7 @@ public class Player : MonoBehaviour
 
     void Slide()
     {
-        animator.SetTrigger(AnimatorVar.doSlide.ToString());
+        PV.RPC(nameof(RPC_SetTrigger), RpcTarget.All, AnimatorVar.doSlide.ToString());
         // To Do - 추후 방향 벡터 수정할것
         rigid.AddForce(moveVec.normalized * slidePower + Vector3.up, ForceMode.Impulse);
         curState = CurState.IsSliding;
@@ -170,6 +185,13 @@ public class Player : MonoBehaviour
     // 근처에 다른 플레이어가 있다면 붙잡음
     void OnFire()
     {
+        // 내 캐릭터가 아니라면 패스
+        if (!isMine)
+            return;
+        // 일시정지 중이라면 패스
+        if (isPaused)
+            return;
+
         // 점프 또는 슬라이딩 중이라면 패스
         if (curState == CurState.IsJumping || curState == CurState.IsSliding)
             return;
@@ -301,11 +323,20 @@ public class Player : MonoBehaviour
     IEnumerator KnuckBack(Vector3 forceVec)
     {
         inKnuckBack = true;
-        animator.SetTrigger(AnimatorVar.onKnuckBack.ToString());
+        PV.RPC(nameof(RPC_SetTrigger), RpcTarget.All, AnimatorVar.onKnuckBack.ToString());
         rigid.AddRelativeForce(forceVec, ForceMode.Impulse);
         yield return WfsManager.Instance.GetWaitForSeconds(knuckbackInterval);
 
         inKnuckBack = false;
     }
+    #endregion
+
+    #region RPC 함수
+    [PunRPC]
+    void RPC_SetTrigger(string triggerName)
+    {
+        animator.SetTrigger(triggerName);
+    }
+
     #endregion
 }

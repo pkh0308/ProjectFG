@@ -8,6 +8,7 @@ public class UiController : MonoBehaviour
 
     [Header("UI Set")]
     [SerializeField] GameObject goalSet;
+    [SerializeField] GameObject gameOverSet;
     [SerializeField] GameObject timeOutSet;
 
     [Header("Timer")]
@@ -23,9 +24,22 @@ public class UiController : MonoBehaviour
         Instance = this;
     }
 
-    public void ActiveGoalSet(bool act)
+    // 승자라면 골인 UI,
+    // 패자라면 게임오버 UI 활성화
+    public void ResultOn(bool isWinner)
     {
-        goalSet.SetActive(act);
+        if(isWinner)
+            goalSet.SetActive(true);
+        else
+            gameOverSet.SetActive(true);
+    }
+    // 현재 활성화된 결과 UI 해제
+    public void ResultOff()
+    {
+        if (goalSet.activeSelf)
+            goalSet.SetActive(false);
+        else
+            gameOverSet.SetActive(false);
     }
 
     public void ActiveTimeOutSet(bool act)
