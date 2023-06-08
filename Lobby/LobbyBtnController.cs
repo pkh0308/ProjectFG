@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class LobbyBtnController : MonoBehaviour
 {
-    bool curReady = false;
+    [SerializeField] Btn_Ready btn_Ready;
 
     public void Btn_SinglePlay()
     {
@@ -22,7 +22,6 @@ public class LobbyBtnController : MonoBehaviour
 
     public void Btn_MultiReady()
     {
-        curReady = !curReady;
-        NetworkManager.Instance.Ready(curReady);
+        btn_Ready.ChangeReady();
     }
 }

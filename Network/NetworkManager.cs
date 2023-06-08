@@ -61,7 +61,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         // 이미 로비라면 패스
         if (GameManager.Instance.CurMode == GameManager.GameMode.Lobby)
             return;
- 
+
+        GameManager.Instance.SetMode(GameManager.GameMode.Lobby);
         SceneController.Instance.LoadLobby();
     }
     // 방 입장 시
@@ -76,14 +77,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PN.Reconnect(); Debug.Log("Reconnect...");
     }
 
-    // 타 플레이어의 방 입장, 퇴장 시
+    // 타 플레이어 방 입장 시
     public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
     {
-        Debug.Log("플레이어 입장");
+        
     }
+    // 타 플레이어 방 퇴장 시
     public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
-        Debug.Log("플레이어 퇴장");
+        MultiUIUpdate();
     }
 
     // 방 퇴장 시
@@ -139,15 +141,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 퇴장 완료 후 채팅방 재입장
     public void LeaveRoom()
     {
-        // 퇴장 시 본인 curReadyUsers는 0으로 초기화
-        //PV.RPC(nameof(ReadyCountReset), RpcTarget.All);
-        
-        PN.LeaveRoom();
-    }
-    [PunRPC]
-    void ReadyCountReset()
-    {
+        // 퇴장 시 curReadyUsers는 0으로 초기화
         curReadyUsers = 0;
+        PN.LeaveRoom();
     }
 
     // 멀티플레이 UI 업데이트
@@ -155,6 +151,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     void MultiUIUpdate()
     {
         LobbyUIController.Instance.MultiWaitStart(CurUsers, MaxUsers);
+        // 누군가 퇴장한 상황이라면 curReadyusers 초기화
+        if (CurUsers < MaxUsers)
+            curReadyUsers = 0;
     }
 
     public void Ready(bool ready)

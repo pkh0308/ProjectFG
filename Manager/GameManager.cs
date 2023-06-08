@@ -43,6 +43,11 @@ public class GameManager : MonoBehaviour
     public GameMode CurMode { get { return curMode; } }
     public bool IsSingleGame { get { return curMode == GameMode.SingleGame; } }
 
+    public void SetMode(GameMode mode)
+    {
+        curMode = mode;
+    }
+
     #region 게임 시작
     public void GameStart(GameMode mode)
     {

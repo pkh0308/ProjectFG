@@ -23,9 +23,10 @@ public class Btn_Ready : MonoBehaviour
         isReady = false;
     }
 
-    public void Btn_ChangeReadyText()
+    public void ChangeReady()
     {
         isReady = !isReady;
         readyText.text = isReady ? onReady : notReady;
+        NetworkManager.Instance.Ready(isReady);
     }
 }
