@@ -160,8 +160,7 @@ public class Player : MonoBehaviour
     void Slide()
     {
         animator.SetTrigger(AnimatorVar.doSlide.ToString());
-        // To Do - 추후 방향 벡터 수정할것
-        rigid.AddForce(moveVec.normalized * slidePower + Vector3.up, ForceMode.Impulse);
+        rigid.AddForce(moveVec.normalized * slidePower + Vector3.up * 2, ForceMode.Impulse);
         curState = CurState.IsSliding;
         StageSoundController.PlaySfx((int)StageSoundController.StageSfx.jump);
     }

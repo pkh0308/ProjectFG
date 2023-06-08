@@ -18,12 +18,10 @@ public class LobbyUIController : MonoBehaviour
 
     [Header("Chatting")]
     [SerializeField] TMP_InputField inputField;
-    [SerializeField] GameObject chatText;
-    [SerializeField] Transform chatField;
     [SerializeField] TextMeshProUGUI[] chats;
+    [SerializeField] int chatRefreshInterval;
     int curChatIdx;
-    [SerializeField] float chatRefreshInterval;
-    float curChatTime;
+    int curChatTime;
     string myName;
     Coroutine chatRoutine;
 
@@ -122,7 +120,13 @@ public class LobbyUIController : MonoBehaviour
     [PunRPC]
     void Chat(string chatValue)
     {
-        curChatIdx++;
+        // 채팅이 꽉 찬 경우
+        // 오래된 채팅 제거 로직 바로 실행
+        if(curChatIdx == chats.Length - 1)
+            RemoveOneChat();
+        else
+            curChatIdx++;
+
         chats[curChatIdx].text = chatValue;
         chats[curChatIdx].gameObject.SetActive(true);
         curChatTime = 0;
@@ -137,10 +141,10 @@ public class LobbyUIController : MonoBehaviour
     {
         while (curChatIdx >= 0)
         {
-            yield return WfsManager.Instance.GetWaitForSeconds(0.1f);
-            curChatTime += 0.1f;
+            yield return WfsManager.Instance.GetWaitForSeconds(1.0f);
+            curChatTime++;
 
-            if(curChatTime > chatRefreshInterval)
+            if(curChatTime >= chatRefreshInterval)
             {
                 RemoveOneChat();
                 curChatTime = 0;
@@ -169,6 +173,5 @@ public class LobbyUIController : MonoBehaviour
         chats[curChatIdx].gameObject.SetActive(false);
         curChatIdx--;
     }
-
     #endregion
 }

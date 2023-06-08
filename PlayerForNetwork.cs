@@ -212,6 +212,8 @@ public class PlayerForNetwork : MonoBehaviour
     #region 충돌 처리
     void OnTriggerEnter(Collider other)
     {
+        if (!isMine) return;
+ 
         // 추락 시 마지막 저장위치로 이동
         if (other.CompareTag(Tags.Fall))
         {
@@ -231,7 +233,6 @@ public class PlayerForNetwork : MonoBehaviour
             StageSoundController.PlaySfx((int)StageSoundController.StageSfx.savePoint);
             return;
         }
-
         // 골인 지점 도착
         if (other.gameObject.CompareTag(Tags.Goal))
         {
@@ -242,13 +243,14 @@ public class PlayerForNetwork : MonoBehaviour
 
     void OnCollisionEnter(Collision coll)
     {
+        if(!isMine) return;
+
         // 바닥 충돌 시 상태 변경
         if (coll.gameObject.CompareTag(Tags.Platform))
         {
             OnPlatform();
             return;
         }
-
         // 움직이는 발판 위에 있는 경우
         if (coll.gameObject.CompareTag(Tags.MovingPlatform))
         {
@@ -256,7 +258,6 @@ public class PlayerForNetwork : MonoBehaviour
             movingPlat = coll.gameObject.GetComponent<MovingPlatform>();
             return;
         }
-
         // 회전 발판 위에 있는 경우
         if (coll.gameObject.CompareTag(Tags.RotatingPlatform))
         {
@@ -274,13 +275,14 @@ public class PlayerForNetwork : MonoBehaviour
 
     void OnCollisionExit(Collision coll)
     {
+        if (!isMine) return;
+
         // 움직이는 발판에서 나갈 경우
         if (coll.gameObject.CompareTag(Tags.MovingPlatform))
         {
             movingPlat = null;
             return;
         }
-
         // 회전 발판에서 나갈 경우
         if (coll.gameObject.CompareTag(Tags.RotatingPlatform))
         {

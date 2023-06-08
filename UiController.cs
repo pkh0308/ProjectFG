@@ -26,7 +26,7 @@ public class UiController : MonoBehaviour
 
     // 승자라면 골인 UI,
     // 패자라면 게임오버 UI 활성화
-    public void ResultOn(bool isWinner)
+    public void ResultOn(bool isWinner = true)
     {
         if(isWinner)
             goalSet.SetActive(true);

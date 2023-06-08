@@ -34,11 +34,13 @@ public class GameManager : MonoBehaviour
     // 현재 게임 상태
     public enum GameMode
     {
+        NotConnected,
         Lobby,
         SingleGame,
         MultiGame
     }
     GameMode curMode;
+    public GameMode CurMode { get { return curMode; } }
     public bool IsSingleGame { get { return curMode == GameMode.SingleGame; } }
 
     #region 게임 시작
@@ -50,7 +52,8 @@ public class GameManager : MonoBehaviour
                 StartSingleGame();
                 break;
             case GameMode.MultiGame:
-                WaitForMultiGame();
+                // 방 입장
+                NetworkManager.Instance.EnterRoom();
                 break;
         }
     }
@@ -59,11 +62,6 @@ public class GameManager : MonoBehaviour
     {
         curMode = GameMode.SingleGame;
         SceneController.Instance.EnterStage(0);
-    }
-
-    void WaitForMultiGame()
-    {
-        NetworkManager.Instance.EnterRoom();
     }
 
     public void StartMultiGame()
@@ -87,31 +85,31 @@ public class GameManager : MonoBehaviour
     #region 골인 시 처리
     public void Goal()
     {
-        // 일시정지
-        isPaused = true;
-
         switch (curMode) 
         {
             case GameMode.SingleGame:
-                StopCoroutine(timerRoutine);
                 StartCoroutine(Goal_SingleGame());
                 break;
             // 승자는 Goal_MultiGame 직접 호출(isWinner = true)
             // 나머지 인원(패자)들은 RPC로 호출(isWinner = false)
             case GameMode.MultiGame:
-                StartCoroutine(Goal_MultiGame(true));
-                PV.RPC(nameof(Goal_M), RpcTarget.Others);
+                    StartCoroutine(Goal_MultiGame(true));
+                PV.RPC(nameof(Goal_Others), RpcTarget.Others); 
                 break;
         }
     }
 
     IEnumerator Goal_SingleGame()
     {
+        // 일시정지
+        isPaused = true;
+        StopCoroutine(timerRoutine);
+
         StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
         StageSoundController.PlaySfx((int)StageSoundController.StageSfx.stageClear);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
-        UiController.Instance.ResultOn(true);
+        UiController.Instance.ResultOn();
         yield return WfsManager.Instance.GetWaitForSeconds(goalInInterval);
         UiController.Instance.ResultOff();
 
@@ -123,15 +121,18 @@ public class GameManager : MonoBehaviour
         isPaused = false;
     }
 
-    // 패자의 결과 코루틴 호출용
     [PunRPC]
-    void Goal_M()
+    void Goal_Others()
     {
         StartCoroutine(Goal_MultiGame(false));
     }
 
     IEnumerator Goal_MultiGame(bool isWinner)
     {
+        // 일시정지
+        isPaused = true;
+        StopCoroutine(timerRoutine);
+
         StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
         StageSoundController.PlaySfx((int)StageSoundController.StageSfx.stageClear);
 
@@ -141,9 +142,9 @@ public class GameManager : MonoBehaviour
         UiController.Instance.ResultOff();
 
         // 로비 이동 및 룸 나가기
+        curMode = GameMode.Lobby;
         SceneController.Instance.ExitStage();
         NetworkManager.Instance.LeaveRoom();
-        curMode = GameMode.Lobby;
 
         // 일시정지 초기화
         isPaused = false;
@@ -186,10 +187,11 @@ public class GameManager : MonoBehaviour
         UiController.Instance.ActiveTimeOutSet(false);
 
         // 로비 이동 및 룸 나가기(멀티플레이)
+        curMode = GameMode.Lobby;
         SceneController.Instance.ExitStage();
         if(curMode == GameMode.MultiGame)
             NetworkManager.Instance.LeaveRoom();
-        curMode = GameMode.Lobby;
+        
 
         // 일시정지 초기화
         isPaused = false;

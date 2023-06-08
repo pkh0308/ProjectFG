@@ -66,7 +66,7 @@ public class SceneController : MonoBehaviour
         curStageIdx = stageIdx + 2;
         loadingScreen.SetActive(true);
         SceneManager.UnloadSceneAsync((int)SceneIndex.LOBBY);
-        StartCoroutine(Loading());
+        StartCoroutine(LoadingStage());
     }
 
     public void ExitStage()
@@ -81,7 +81,7 @@ public class SceneController : MonoBehaviour
     IEnumerator LoadingLobby()
     {
         //로비 씬 로드 대기
-        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.LOBBY, LoadSceneMode.Additive); Debug.Log("Loading...");
+        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.LOBBY, LoadSceneMode.Additive);
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
@@ -93,7 +93,7 @@ public class SceneController : MonoBehaviour
 
     //입장하는 스테이지를 LoadSceneAsync로 로딩하며 AsyncOperation 변수에 저장
     //로딩 작업이 완료될때까지 대기한 후 해당 스테이지를 액티브 씬으로 설정, 이후 오브젝트 생성
-    IEnumerator Loading()
+    IEnumerator LoadingStage()
     {
         //스테이지 씬 로드 대기
         // 추후 curStageIdx 이용하도록 수정할 것

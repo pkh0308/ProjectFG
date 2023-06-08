@@ -58,6 +58,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 로비 씬 로딩 및 채팅방 입장
     public override void OnJoinedLobby()
     {
+        // 이미 로비라면 패스
+        if (GameManager.Instance.CurMode == GameManager.GameMode.Lobby)
+            return;
+ 
         SceneController.Instance.LoadLobby();
     }
     // 방 입장 시
@@ -83,9 +87,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
 
     // 방 퇴장 시
+    // 로비일 경우(멀티 대기중에 퇴장 시) 대기 UI 비활성화
     public override void OnLeftRoom()
     {
-        // 멀티방 퇴장
+        if (GameManager.Instance.CurMode != GameManager.GameMode.Lobby)
+            return;
+
         // 대기 UI 비활성화
         LobbyUIController.Instance.MultiWaitSetOff();
     }
@@ -122,14 +129,27 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 멀티방 입장은 OnLeftRoom()에서 처리
     public void EnterRoom()
     {
-        PN.JoinOrCreateRoom("room", new RoomOptions() { MaxPlayers = 2 }, null);
+        // 방이 있다면 랜덤 입장, 없다면 생성
+        // 최대 인원수 2인 방에 참가, 없다면 최대 인원수 2인 방 생성
+        PN.JoinRandomOrCreateRoom(
+            expectedMaxPlayers: 2,
+            roomOptions: new RoomOptions() { MaxPlayers = 2 });
     }
     // 멀티플레이 대기 방 퇴장
     // 퇴장 완료 후 채팅방 재입장
     public void LeaveRoom()
     {
+        // 퇴장 시 본인 curReadyUsers는 0으로 초기화
+        //PV.RPC(nameof(ReadyCountReset), RpcTarget.All);
+        
         PN.LeaveRoom();
     }
+    [PunRPC]
+    void ReadyCountReset()
+    {
+        curReadyUsers = 0;
+    }
+
     // 멀티플레이 UI 업데이트
     [PunRPC]
     void MultiUIUpdate()
