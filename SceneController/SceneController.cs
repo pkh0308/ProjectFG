@@ -24,7 +24,8 @@ public class SceneController : MonoBehaviour
         TITLE,
         LOBBY,
         PLAYER,
-        STAGE_01
+        STAGE_RUN_01,
+        STAGE_SURVIVE_01
     }
 
     void Awake()
@@ -72,7 +73,7 @@ public class SceneController : MonoBehaviour
     public void ExitStage()
     {
         loadingScreen.SetActive(true);
-        SceneManager.UnloadSceneAsync((int)SceneIndex.STAGE_01); // 추후 curStageIdx 이용하도록 수정할 것
+        SceneManager.UnloadSceneAsync((int)SceneIndex.STAGE_SURVIVE_01); // 추후 curStageIdx 이용하도록 수정할 것
         SceneManager.UnloadSceneAsync((int)SceneIndex.PLAYER);
         SceneManager.LoadScene((int)SceneIndex.LOBBY, LoadSceneMode.Additive);
         loadingScreen.SetActive(false);
@@ -95,20 +96,22 @@ public class SceneController : MonoBehaviour
     //로딩 작업이 완료될때까지 대기한 후 해당 스테이지를 액티브 씬으로 설정, 이후 오브젝트 생성
     IEnumerator LoadingStage()
     {
+        //플레이어 씬 로드 대기
+        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.PLAYER, LoadSceneMode.Additive);
+        while (!op.isDone)
+        {
+            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
+        }
+
         //스테이지 씬 로드 대기
         // 추후 curStageIdx 이용하도록 수정할 것
-        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.STAGE_01, LoadSceneMode.Additive);
-        curStageIdx = (int)SceneIndex.STAGE_01;
+        op = SceneManager.LoadSceneAsync((int)SceneIndex.STAGE_SURVIVE_01, LoadSceneMode.Additive);
+        curStageIdx = (int)SceneIndex.STAGE_SURVIVE_01;
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
-        //플레이어 씬 로드 대기
-        op = SceneManager.LoadSceneAsync((int)SceneIndex.PLAYER, LoadSceneMode.Additive);
-        while (!op.isDone)
-        {
-            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
-        }
+        
         loadingScreen.SetActive(false);
     }
 }

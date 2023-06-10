@@ -85,6 +85,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 타 플레이어 방 퇴장 시
     public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
+        // 다른 유저가 나갔을 경우 내 UI 업데이트
         MultiUIUpdate();
     }
 

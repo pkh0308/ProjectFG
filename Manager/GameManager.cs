@@ -21,7 +21,6 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] float goalInInterval;
     [SerializeField] float timeOutInterval;
-    [SerializeField] int timeLimit;
     int curTime;
 
     // 일시정지
@@ -157,13 +156,13 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region 타이머 및 시간 초과
-    public void StartTimer()
+    public void StartTimer(int timeLimit)
     {
-        timerRoutine = StartCoroutine(Timer());
+        timerRoutine = StartCoroutine(Timer(timeLimit));
     }
 
     // 타이머 코루틴
-    IEnumerator Timer()
+    IEnumerator Timer(int timeLimit)
     {
         curTime = timeLimit;
 

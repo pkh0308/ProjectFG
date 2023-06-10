@@ -14,6 +14,7 @@ public class UiController : MonoBehaviour
     [Header("Timer")]
     [SerializeField] GameObject timerSet;
     [SerializeField] TextMeshProUGUI timerText;
+    int timeLimit;
 
     [Header("Count Down")]
     [SerializeField] GameObject countDownSet;
@@ -22,6 +23,11 @@ public class UiController : MonoBehaviour
     void Awake()
     {
         Instance = this;
+    }
+
+    public void SetTimeLimit(int timeLimit)
+    {
+        this.timeLimit = timeLimit;
     }
 
     // 승자라면 골인 UI,
@@ -73,7 +79,7 @@ public class UiController : MonoBehaviour
         GameManager.Instance.PauseOff();
         // 타이머 시작
         timerSet.SetActive(true);
-        GameManager.Instance.StartTimer();
+        GameManager.Instance.StartTimer(timeLimit);
 
         yield return WfsManager.Instance.GetWaitForSeconds(2.0f);
         countDownSet.SetActive(false);

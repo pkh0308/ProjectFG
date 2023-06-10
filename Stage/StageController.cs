@@ -6,6 +6,9 @@ using UnityEngine;
 // 플레이어 생성 및 초기 스테이지 뷰를 담당
 public class StageController : MonoBehaviour
 {
+    [Header("시간 제한")]
+    [SerializeField] int timeLimit;
+
     [Header("플레이어 생성")]
     [SerializeField] GameObject playerPrefab;
     [SerializeField] Vector3 initialPlayerPos;
@@ -25,6 +28,13 @@ public class StageController : MonoBehaviour
     void Awake()
     { 
         isSingleGame = GameManager.Instance.IsSingleGame;
+        Initialize();
+    }
+
+    // 상속받는 클래스에서 구현
+    protected virtual void Initialize()
+    {
+
     }
 
     void Start()
@@ -37,6 +47,9 @@ public class StageController : MonoBehaviour
         // 스테이지 보여주기 코루틴 실행
         initialPos = mainCamera.gameObject.transform.position;
         StartCoroutine(ShowStage(p.transform));
+
+        // 타이머 설정
+        UiController.Instance.SetTimeLimit(timeLimit);
     }
 
     // 캐릭터 생성

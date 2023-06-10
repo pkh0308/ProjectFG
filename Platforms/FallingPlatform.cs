@@ -9,6 +9,7 @@ public class FallingPlatform : MonoBehaviour
 
     [Header("낙하")]
     [SerializeField] float fallDelay;
+    bool fallDown = true;
 
     [Header("재생 관련")]
     [SerializeField] bool isRestorable;
@@ -27,6 +28,8 @@ public class FallingPlatform : MonoBehaviour
 
     void OnCollisionEnter(Collision coll)
     {
+        if (!fallDown) return;
+
         if(coll.gameObject.CompareTag(Tags.Player)) 
         {
             // 이미 추락중이라면 패스
@@ -36,6 +39,11 @@ public class FallingPlatform : MonoBehaviour
             StartCoroutine(Fall());
             return;
         }
+    }
+
+    public void NotFall()
+    {
+        fallDown = false;
     }
 
     IEnumerator Fall()
