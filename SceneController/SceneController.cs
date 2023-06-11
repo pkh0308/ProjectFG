@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// System.Random과 혼선 방지용
+using Random = UnityEngine.Random;
+
 public class SceneController : MonoBehaviour
 {
     [Header("Loading")]
@@ -10,9 +13,6 @@ public class SceneController : MonoBehaviour
     [SerializeField] GameObject loadingCamera;
 
     public static SceneController Instance { get; private set; }
-
-    // 외부 호출용 전달자
-    public static Action SetActiveSceneToCurStage;
 
     int curStageIdx;
     public int CurStageIdx { get { return curStageIdx; } }
@@ -32,18 +32,17 @@ public class SceneController : MonoBehaviour
     {
         Instance = this;
         Application.targetFrameRate = 60;
-        SetActiveSceneToCurStage = SetActiveScene;
     }
 
     void Start()
     {
-        SceneManager.LoadSceneAsync((int)SceneIndex.TITLE, LoadSceneMode.Additive);
+        SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.TITLE), LoadSceneMode.Additive);
     }
 
     // 로비 입장 버튼
     public void EnterLobby()
     {
-        SceneManager.UnloadSceneAsync((int)SceneIndex.TITLE);
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.TITLE));
         // 서버 연결 요청
         NetworkManager.Instance.ConnectToServer();
     }
@@ -57,39 +56,46 @@ public class SceneController : MonoBehaviour
 
     public void LoadLobby()
     {
-        if (SceneManager.GetActiveScene() != SceneManager.GetSceneByBuildIndex((int)SceneIndex.LOBBY))
+        if (SceneManager.GetActiveScene()
+            != SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.LOBBY)))
             StartCoroutine(LoadingLobby());
     }
 
     //스테이지 입장 시
     public void EnterStage(int stageIdx)
     {
-        curStageIdx = stageIdx + 2;
+        curStageIdx = stageIdx;
         loadingScreen.SetActive(true);
-        SceneManager.UnloadSceneAsync((int)SceneIndex.LOBBY);
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.LOBBY));
         StartCoroutine(LoadingStage());
+    }
+    // 랜덤 스테이지 입장용
+    public int GetRandomStageIdx()
+    {
+        return Random.Range(Convert.ToInt32(SceneIndex.STAGE_RUN_01),
+                            Convert.ToInt32(SceneIndex.STAGE_SURVIVE_01) + 1);
     }
 
     public void ExitStage()
     {
         loadingScreen.SetActive(true);
-        SceneManager.UnloadSceneAsync((int)SceneIndex.STAGE_SURVIVE_01); // 추후 curStageIdx 이용하도록 수정할 것
-        SceneManager.UnloadSceneAsync((int)SceneIndex.PLAYER);
-        SceneManager.LoadScene((int)SceneIndex.LOBBY, LoadSceneMode.Additive);
+        SceneManager.UnloadSceneAsync(curStageIdx);
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.PLAYER));
+        SceneManager.LoadScene(Convert.ToInt32(SceneIndex.LOBBY), LoadSceneMode.Additive);
         loadingScreen.SetActive(false);
     }
 
     IEnumerator LoadingLobby()
     {
         //로비 씬 로드 대기
-        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.LOBBY, LoadSceneMode.Additive);
+        AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.LOBBY), LoadSceneMode.Additive);
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
         loadingScreen.SetActive(false);
         loadingCamera.SetActive(false);
-        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex((int)SceneIndex.LOBBY));
+        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.LOBBY)));
     }
 
     //입장하는 스테이지를 LoadSceneAsync로 로딩하며 AsyncOperation 변수에 저장
@@ -97,16 +103,14 @@ public class SceneController : MonoBehaviour
     IEnumerator LoadingStage()
     {
         //플레이어 씬 로드 대기
-        AsyncOperation op = SceneManager.LoadSceneAsync((int)SceneIndex.PLAYER, LoadSceneMode.Additive);
+        AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.PLAYER), LoadSceneMode.Additive);
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
 
         //스테이지 씬 로드 대기
-        // 추후 curStageIdx 이용하도록 수정할 것
-        op = SceneManager.LoadSceneAsync((int)SceneIndex.STAGE_SURVIVE_01, LoadSceneMode.Additive);
-        curStageIdx = (int)SceneIndex.STAGE_SURVIVE_01;
+        op = SceneManager.LoadSceneAsync(curStageIdx, LoadSceneMode.Additive);
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);

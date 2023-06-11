@@ -85,16 +85,23 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 타 플레이어 방 퇴장 시
     public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
+        if (GameManager.Instance.CurMode != GameManager.GameMode.Lobby)
+            return;
+
         // 다른 유저가 나갔을 경우 내 UI 업데이트
         MultiUIUpdate();
     }
 
     // 방 퇴장 시
+    // 로비일 경우 게임 모드를 로비로 변경
     // 로비일 경우(멀티 대기중에 퇴장 시) 대기 UI 비활성화
     public override void OnLeftRoom()
     {
         if (GameManager.Instance.CurMode != GameManager.GameMode.Lobby)
+        {
+            GameManager.Instance.SetMode(GameManager.GameMode.Lobby);
             return;
+        }  
 
         // 대기 UI 비활성화
         LobbyUIController.Instance.MultiWaitSetOff();

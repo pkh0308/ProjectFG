@@ -7,6 +7,9 @@ using UnityEngine.UI;
 
 public class LobbyUIController : MonoBehaviour
 {
+    [Header("Single Play")]
+    [SerializeField] GameObject stageSelectSet;
+
     [Header("Multi Play")]
     [SerializeField] GameObject multiWaitSet;
     [SerializeField] TextMeshProUGUI multiWaitText;
@@ -45,6 +48,13 @@ public class LobbyUIController : MonoBehaviour
         curChatTime = 0;
         myName = "player" + Random.Range(1000, 10000).ToString();
     }
+
+    #region 싱글플레이
+    public void StageSelectSet(bool act)
+    {
+        stageSelectSet.SetActive(act);
+    }
+    #endregion
 
     #region 멀티플레이
     public void MultiWaitStart(int curPlayers, int maxPlayers)

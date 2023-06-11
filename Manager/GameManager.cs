@@ -48,12 +48,12 @@ public class GameManager : MonoBehaviour
     }
 
     #region 게임 시작
-    public void GameStart(GameMode mode)
+    public void GameStart(GameMode mode, int stageIdx = 0)
     {
         switch (mode)
         {
             case GameMode.SingleGame:
-                StartSingleGame();
+                StartSingleGame(stageIdx);
                 break;
             case GameMode.MultiGame:
                 // 방 입장
@@ -62,16 +62,28 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void StartSingleGame()
+    void StartSingleGame(int stageIdx)
     {
         curMode = GameMode.SingleGame;
-        SceneController.Instance.EnterStage(0);
+        SceneController.Instance.EnterStage(stageIdx);
     }
 
     public void StartMultiGame()
     {
         curMode = GameMode.MultiGame;
-        SceneController.Instance.EnterStage(0);
+        // 마스터 클라이언트에서 실행
+        // 랜덤 스테이지 인덱스로 입장(RPC)
+        if(NetworkManager.Instance.IsMaster)
+        {
+            int idx = SceneController.Instance.GetRandomStageIdx();
+            PV.RPC(nameof(EnterRandomStage), RpcTarget.All, idx);
+        }
+    }
+
+    [PunRPC]
+    void EnterRandomStage(int stageIdx)
+    {
+        SceneController.Instance.EnterStage(stageIdx);
     }
     #endregion
 
@@ -92,14 +104,14 @@ public class GameManager : MonoBehaviour
         switch (curMode) 
         {
             case GameMode.SingleGame:
-                StartCoroutine(Goal_SingleGame());
-                break;
+                 StartCoroutine(Goal_SingleGame());
+                 break;
             // 승자는 Goal_MultiGame 직접 호출(isWinner = true)
             // 나머지 인원(패자)들은 RPC로 호출(isWinner = false)
             case GameMode.MultiGame:
-                    StartCoroutine(Goal_MultiGame(true));
-                PV.RPC(nameof(Goal_Others), RpcTarget.Others); 
-                break;
+                 StartCoroutine(Goal_MultiGame(true));
+                 PV.RPC(nameof(Goal_Others), RpcTarget.Others); 
+                 break;
         }
     }
 
@@ -146,7 +158,6 @@ public class GameManager : MonoBehaviour
         UiController.Instance.ResultOff();
 
         // 로비 이동 및 룸 나가기
-        curMode = GameMode.Lobby;
         SceneController.Instance.ExitStage();
         NetworkManager.Instance.LeaveRoom();
 

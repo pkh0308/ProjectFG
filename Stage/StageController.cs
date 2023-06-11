@@ -1,3 +1,4 @@
+using Photon.Pun;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -6,6 +7,8 @@ using UnityEngine;
 // 플레이어 생성 및 초기 스테이지 뷰를 담당
 public class StageController : MonoBehaviour
 {
+    protected PhotonView PV;
+
     [Header("시간 제한")]
     [SerializeField] int timeLimit;
 
@@ -26,8 +29,10 @@ public class StageController : MonoBehaviour
     bool isSingleGame;
 
     void Awake()
-    { 
+    {
         isSingleGame = GameManager.Instance.IsSingleGame;
+        PV = GetComponent<PhotonView>();
+
         Initialize();
     }
 
@@ -40,7 +45,7 @@ public class StageController : MonoBehaviour
     void Start()
     {
         // 현재 스테이지를 액티브 씬으로 설정 후 캐릭터 생성
-        SceneController.SetActiveSceneToCurStage();
+        SceneController.Instance.SetActiveScene();
         // null을 반환받았을 경우 예외 발생시킴
         GameObject p = InstantiatePlayer() ?? throw new Exception("캐릭터 생성 실패");
 

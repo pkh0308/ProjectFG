@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Photon.Pun;
 
 public class Survive_01 : StageController
 {
@@ -9,6 +10,11 @@ public class Survive_01 : StageController
 
     protected override void Initialize()
     {
+        // 마스터 클라이언트에서만 실행
+        // 발판 설정 부분은 RPC로 실행하여 다른 클라이언트들과 동기화
+        if (NetworkManager.Instance.IsMaster == false)
+            return;
+
         // 랜덤 루트 설정
         // 5개의 발판 중 하나는 true 발판으로 설정
         // 이전 발판 1칸 앞 발판과 새로 지정한 발판 사이는 true 발판으로 설정
@@ -22,16 +28,22 @@ public class Survive_01 : StageController
             {
                 int high = que.Peek() > idx ? que.Peek() : idx;
                 int low = que.Peek() < idx ? que.Peek() : idx;
-                for (int j = low; j <= high; j++)
-                    tofPlatforms[i + j].IsTrue();
+                PV.RPC(nameof(SetTrue), RpcTarget.All, i, low, high);
                 // 큐 비우기
                 que.Dequeue();
             }
             // 첫 행일 경우
             else
-                tofPlatforms[i + idx].IsTrue();
+                PV.RPC(nameof(SetTrue), RpcTarget.All, i, idx, idx);
 
             que.Enqueue(idx);
         }
+    }
+
+    [PunRPC]
+    void SetTrue(int idx, int low, int high)
+    {
+        for (int i = low; i <= high; i++)
+            tofPlatforms[idx + i].IsTrue();
     }
 }
