@@ -10,6 +10,7 @@ public class StageController : MonoBehaviour
     protected PhotonView PV;
 
     [Header("시간 제한")]
+    [Tooltip("서바이벌 스테이지라면 -1로 설정")]
     [SerializeField] int timeLimit;
 
     [Header("플레이어 생성")]
@@ -33,11 +34,26 @@ public class StageController : MonoBehaviour
         isSingleGame = GameManager.Instance.IsSingleGame;
         PV = GetComponent<PhotonView>();
 
-        Initialize();
+        // 싱글게임/멀티게임 초기화 구분
+        if (NetworkManager.Instance.InRoom)
+            Initialize_Multi();
+        else
+            Initialize_Single();
     }
 
     // 상속받는 클래스에서 구현
-    protected virtual void Initialize()
+    // 싱글 플레이용 초기화 함수
+    protected virtual void Initialize_Single()
+    {
+
+    }
+    // 멀티 플레이용 초기화 함수
+    protected virtual void Initialize_Multi()
+    {
+
+    }
+    // 일시정지가 해제된 시점에 호출되는 함수
+    protected virtual void OnGameStart()
     {
 
     }
@@ -52,6 +68,7 @@ public class StageController : MonoBehaviour
         // 스테이지 보여주기 코루틴 실행
         initialPos = mainCamera.gameObject.transform.position;
         StartCoroutine(ShowStage(p.transform));
+        StartCoroutine(PauseCheck());
 
         // 타이머 설정
         UiController.Instance.SetTimeLimit(timeLimit);
@@ -91,5 +108,21 @@ public class StageController : MonoBehaviour
 
         mainCamera.SetTarget(target);
         UiController.Instance.StartCountDown();
+    }
+
+    IEnumerator PauseCheck()
+    {
+        bool pause = false;
+        // GameManager의 일시정지가 풀릴때까지 루프
+        while (!pause)
+        {
+            if(GameManager.Instance.IsPaused)
+            {
+                pause = true;
+                break;
+            }
+            yield return null;
+        }
+        OnGameStart();
     }
 }

@@ -25,8 +25,14 @@ public class SceneController : MonoBehaviour
         LOBBY,
         PLAYER,
         STAGE_RUN_01,
-        STAGE_SURVIVE_01
+        STAGE_SURVIVE_01,
+        STAGE_SURVIVE_02
     }
+
+    // Build Index 상의 첫번째 스테이지와 마지막 스테이지
+    // 스테이지 씬 추가 혹은 순서 변경 시 수정 요망
+    int firstStageIdx = Convert.ToInt32(SceneIndex.STAGE_RUN_01);
+    int lastStageIdx = Convert.ToInt32(SceneIndex.STAGE_SURVIVE_02);
 
     void Awake()
     {
@@ -72,8 +78,7 @@ public class SceneController : MonoBehaviour
     // 랜덤 스테이지 입장용
     public int GetRandomStageIdx()
     {
-        return Random.Range(Convert.ToInt32(SceneIndex.STAGE_RUN_01),
-                            Convert.ToInt32(SceneIndex.STAGE_SURVIVE_01) + 1);
+        return Random.Range(firstStageIdx, lastStageIdx + 1);
     }
 
     public void ExitStage()
@@ -98,8 +103,8 @@ public class SceneController : MonoBehaviour
         SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.LOBBY)));
     }
 
-    //입장하는 스테이지를 LoadSceneAsync로 로딩하며 AsyncOperation 변수에 저장
-    //로딩 작업이 완료될때까지 대기한 후 해당 스테이지를 액티브 씬으로 설정, 이후 오브젝트 생성
+    // 입장하는 스테이지를 LoadSceneAsync로 로딩하며 AsyncOperation 변수에 저장
+    // 로딩이 끝날때까지 대기하다가 끝나면 로딩 스크린 해제
     IEnumerator LoadingStage()
     {
         //플레이어 씬 로드 대기

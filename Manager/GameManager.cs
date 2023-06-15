@@ -23,6 +23,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] float timeOutInterval;
     int curTime;
 
+    // 서바이벌 스테이지
+    int curSurvivors;
+    bool isOver;
+
     // 일시정지
     bool isPaused;
     public bool IsPaused { get { return isPaused; } }
@@ -71,9 +75,11 @@ public class GameManager : MonoBehaviour
     public void StartMultiGame()
     {
         curMode = GameMode.MultiGame;
+        isPaused = true;
+        curSurvivors = NetworkManager.Instance.CurUsers;
         // 마스터 클라이언트에서 실행
         // 랜덤 스테이지 인덱스로 입장(RPC)
-        if(NetworkManager.Instance.IsMaster)
+        if (NetworkManager.Instance.IsMaster)
         {
             int idx = SceneController.Instance.GetRandomStageIdx();
             PV.RPC(nameof(EnterRandomStage), RpcTarget.All, idx);
@@ -83,7 +89,8 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     void EnterRandomStage(int stageIdx)
     {
-        SceneController.Instance.EnterStage(stageIdx);
+        //SceneController.Instance.EnterStage(stageIdx);
+        SceneController.Instance.EnterStage(6);
     }
     #endregion
 
@@ -110,7 +117,7 @@ public class GameManager : MonoBehaviour
             // 나머지 인원(패자)들은 RPC로 호출(isWinner = false)
             case GameMode.MultiGame:
                  StartCoroutine(Goal_MultiGame(true));
-                 PV.RPC(nameof(Goal_Others), RpcTarget.Others); 
+                 PV.RPC(nameof(Goal_Others), RpcTarget.Others);
                  break;
         }
     }
@@ -163,6 +170,48 @@ public class GameManager : MonoBehaviour
 
         // 일시정지 초기화
         isPaused = false;
+    }
+    #endregion
+
+    #region 아웃 처리
+    public void PlayerOut()
+    {
+        isOver = true;
+        UiController.Instance.ResultOn(false);
+        UiController.Instance.MinusUserCount();
+
+        PV.RPC(nameof(Survive_Count), RpcTarget.All);
+    }
+
+    [PunRPC]
+    void Survive_Count()
+    {
+        curSurvivors--;
+        if(curSurvivors == 1)
+            StartCoroutine(Survive_MultiGame(!isOver)); // 게임오버 여부 반전해서 전달
+    }
+
+    IEnumerator Survive_MultiGame(bool isWinner)
+    {
+        // 일시정지
+        isPaused = true;
+
+        StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
+        StageSoundController.PlaySfx((int)StageSoundController.StageSfx.stageClear);
+
+        // goalInInterval만큼 결과 UI 노출 후 해제
+        UiController.Instance.ResultOn(isWinner);
+        yield return WfsManager.Instance.GetWaitForSeconds(goalInInterval);
+        UiController.Instance.ResultOff();
+
+        // 로비 이동 및 룸 나가기
+        SceneController.Instance.ExitStage();
+        NetworkManager.Instance.LeaveRoom();
+
+        // 일시정지 및 변수 초기화
+        isPaused = false;
+        curSurvivors = 0;
+        isOver = false;
     }
     #endregion
 

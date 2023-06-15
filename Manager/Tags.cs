@@ -15,7 +15,9 @@ public static class Tags
     public readonly static string Platform = "Platform";
     public readonly static string MovingPlatform = "MovingPlatform";
     public readonly static string RotatingPlatform = "RotatingPlatform";
+    public readonly static string TOFPlatform = "TOFPlatform";
     public readonly static string Fall = "Fall";
     public readonly static string SavePoint = "SavePoint";
     public readonly static string Goal = "Goal";
+    public readonly static string OutArea = "OutArea";
 }

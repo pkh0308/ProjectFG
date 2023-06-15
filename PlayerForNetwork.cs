@@ -239,6 +239,12 @@ public class PlayerForNetwork : MonoBehaviour
             GameManager.Instance.Goal();
             return;
         }
+        // 아웃
+        if (other.gameObject.CompareTag(Tags.OutArea))
+        {
+            GameManager.Instance.PlayerOut();
+            return;
+        }
     }
 
     void OnCollisionEnter(Collision coll)
@@ -263,6 +269,14 @@ public class PlayerForNetwork : MonoBehaviour
         {
             OnPlatform();
             rotatingPlat = coll.gameObject.GetComponent<RotatingPlatform>();
+            return;
+        }
+        // TOF 발판 위에 착지한 경우
+        // 진짜 발판일 경우에만 착지 판정 실행
+        if (coll.gameObject.CompareTag(Tags.TOFPlatform))
+        {
+            if(coll.gameObject.GetComponent<TrueOrFalsePlatform>().IsTrue)
+                OnPlatform();
             return;
         }
     }

@@ -8,9 +8,7 @@ public class RotatingObstacle : MonoBehaviour
     Quaternion deltaRotation;
     Vector3 rotateVelocity;
 
-    //// 플레이어 넉백용 변수
-    //[SerializeField] float knuckbackForce;
-    //Quaternion rotationDir;
+    [SerializeField] bool isRotating;
 
     public enum RotateDirection
     {
@@ -31,37 +29,33 @@ public class RotatingObstacle : MonoBehaviour
         {
             case RotateDirection.Clockwise:
                 rotateVelocity = new Vector3(0, rotateDegree, 0);
-                //rotationDir = Quaternion.Euler(0, -90, 0);
                 break;
             case RotateDirection.Counter_Clockwise:
                 rotateVelocity = new Vector3(0, -rotateDegree, 0);
-                //rotationDir = Quaternion.Euler(0, 90, 0);
                 break;
         }
     }
 
     void FixedUpdate()
     {
+        if (!isRotating) return;
+
         deltaRotation = Quaternion.Euler(rotateVelocity * Time.fixedDeltaTime);
         rigid.MoveRotation(rigid.rotation * deltaRotation);
     }
 
-    //// 플레이어 넉백용 forceVector 반환
-    //// (플레이어 -> 회전 장애물) 방향의 벡터를 90/-90도 회전시킨 값을 반환
-    //public Vector3 GetForceVec(Vector3 playerPos)
-    //{
-    //    Vector3 forceVec = rotationDir * (striker.position - playerPos); 
-    //    forceVec.y = 0.05f; 
-    //    forceVec *= knuckbackForce;
-    //    return forceVec;
-    //}
+    public void RotationStop()
+    {
+        isRotating = false;
+    }
 
-    //void OnTriggerEnter(Collider coll)
-    //{
-    //    if (coll.CompareTag(Tags.Player) == false)
-    //        return;
+    public void RotationStart()
+    {
+        isRotating = true;
+    }
 
-    //    Vector3 forceVec = GetForceVec(coll.transform.position);
-    //    coll.GetComponent<Player>().OnKnuckBack(forceVec);
-    //}
+    public void Accelerate(float value)
+    {
+        rotateDegree += value;
+    }
 }

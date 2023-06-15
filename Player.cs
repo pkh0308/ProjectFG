@@ -241,6 +241,14 @@ public class Player : MonoBehaviour
             rotatingPlat = coll.gameObject.GetComponent<RotatingPlatform>();
             return;
         }
+        // TOF 발판 위에 착지한 경우
+        // 진짜 발판일 경우에만 착지 판정 실행
+        if (coll.gameObject.CompareTag(Tags.TOFPlatform))
+        {
+            if (coll.gameObject.GetComponent<TrueOrFalsePlatform>().IsTrue)
+                OnPlatform();
+            return;
+        }
     }
 
     void OnPlatform()
