@@ -29,9 +29,18 @@ public class StageController : MonoBehaviour
     // 싱글/멀티 여부
     bool isSingleGame;
 
+    enum State
+    {
+        NotBegin,
+        OnGame,
+        EndGame
+    }
+    State curState;
+
     void Awake()
     {
         isSingleGame = GameManager.Instance.IsSingleGame;
+        curState = State.NotBegin;
         PV = GetComponent<PhotonView>();
 
         // 싱글게임/멀티게임 초기화 구분
@@ -41,6 +50,7 @@ public class StageController : MonoBehaviour
             Initialize_Single();
     }
 
+    #region 가상 함수
     // 상속받는 클래스에서 구현
     // 싱글 플레이용 초기화 함수
     protected virtual void Initialize_Single()
@@ -52,11 +62,17 @@ public class StageController : MonoBehaviour
     {
 
     }
-    // 일시정지가 해제된 시점에 호출되는 함수
+    // 게임 시작 시점에 호출하는 함수
     protected virtual void OnGameStart()
     {
 
     }
+    // 게임 종료 시점에 호출하는 함수
+    protected virtual void OnGameStop() 
+    {
+        
+    }
+    #endregion
 
     void Start()
     {
@@ -68,10 +84,28 @@ public class StageController : MonoBehaviour
         // 스테이지 보여주기 코루틴 실행
         initialPos = mainCamera.gameObject.transform.position;
         StartCoroutine(ShowStage(p.transform));
-        StartCoroutine(PauseCheck());
 
         // 타이머 설정
         UiController.Instance.SetTimeLimit(timeLimit);
+    }
+
+    // 게임 시작 및 정지 시점 체크
+    void Update()
+    {
+        // 게임 시작 시점
+        if(curState == State.NotBegin && !GameManager.Instance.IsPaused) 
+        {
+            curState = State.OnGame;
+            OnGameStart();
+            return;
+        }
+        // 게임 종료 시점
+        if (curState == State.OnGame && GameManager.Instance.IsPaused)
+        {
+            curState= State.EndGame;
+            OnGameStop();
+            return;
+        }
     }
 
     // 캐릭터 생성
@@ -92,7 +126,6 @@ public class StageController : MonoBehaviour
     // 카메라 움직임 컨트롤
     IEnumerator ShowStage(Transform target)
     {
-        GameManager.Instance.PauseOn();
         yield return WfsManager.Instance.GetWaitForSeconds(beginningInterval);
 
         float count = 0;
@@ -107,22 +140,17 @@ public class StageController : MonoBehaviour
         yield return WfsManager.Instance.GetWaitForSeconds(endInterval);
 
         mainCamera.SetTarget(target);
-        UiController.Instance.StartCountDown();
+        // 싱글 플레이 시 바로 카운트다운 시작
+        // 멀티플레이일 경우 준비된 유저 카운트
+        if (isSingleGame)
+            UiController.Instance.StartCountDown();
+        else
+            PV.RPC(nameof(Ready), RpcTarget.All);
     }
 
-    IEnumerator PauseCheck()
+    [PunRPC]
+    protected void Ready()
     {
-        bool pause = false;
-        // GameManager의 일시정지가 풀릴때까지 루프
-        while (!pause)
-        {
-            if(GameManager.Instance.IsPaused)
-            {
-                pause = true;
-                break;
-            }
-            yield return null;
-        }
-        OnGameStart();
+        GameManager.Instance.PlayerReady();
     }
 }

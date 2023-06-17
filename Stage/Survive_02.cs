@@ -13,27 +13,34 @@ public class Survive_02 : StageController
     [SerializeField] float acclerateDegree;
 
     [Header("발판 추락")]
-    [SerializeField] GameObject[] platforms;
+    [SerializeField] DelayFallPlatform[] delayFallPlatforms;
     [SerializeField] float fallDownInterval;
     int count;
 
     protected override void Initialize_Multi()
     {
-        count = platforms.Length;
+        count = delayFallPlatforms.Length;
         StartCoroutine(FallDown());
     }
 
+    // 스틱 회전 시작 및 가속 코루틴 호출
     protected override void OnGameStart()
     {
-        lowerStick.RotationStart();
+        lowerStick.RotationStart(); Debug.Log("OnGameStart");
         upperStick.RotationStart();
         StartCoroutine(AccelerateLowerStick());
+    }
+    // 스틱 회전 정지
+    protected override void OnGameStop()
+    {
+        lowerStick.RotationStop(); Debug.Log("OnGameStop");
+        upperStick.RotationStop();
     }
 
     IEnumerator FallDown()
     {
-        List<int> list = new List<int>(platforms.Length);
-        for(int i = 0; i < platforms.Length; i++)
+        List<int> list = new List<int>(delayFallPlatforms.Length);
+        for(int i = 0; i < delayFallPlatforms.Length; i++)
             list.Add(i);
 
         // fallDownInterval 만큼 대기 후 떨어트릴 플랫폼 지정
@@ -43,9 +50,8 @@ public class Survive_02 : StageController
         {
             yield return WfsManager.Instance.GetWaitForSeconds(fallDownInterval);
             randIdx = Random.Range(0, list.Count);
-            // ToDo : 애니메이션 설정
-            yield return WfsManager.Instance.GetWaitForSeconds(1.0f);
-            // ToDo : 추락 실행
+            delayFallPlatforms[randIdx].StartFall();
+            list.Remove(randIdx);
 
             count--;
         }

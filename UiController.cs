@@ -107,8 +107,8 @@ public class UiController : MonoBehaviour
             count--;
         }
         countDownText.text = "Go!!!";
-        // 게임 시작
-        GameManager.Instance.PauseOff();
+        // 게임 시작 
+        GameManager.Instance.PauseOff(); Debug.Log("PauseOff");
         // 타이머 or 유저 카운트 세팅
         if (timeLimit > 0)
             SetTimer();

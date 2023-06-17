@@ -23,7 +23,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] float timeOutInterval;
     int curTime;
 
-    // 서바이벌 스테이지
+    // 멀티플레이 관련
+    int stageReadyCount;
     int curSurvivors;
     bool isOver;
 
@@ -92,6 +93,13 @@ public class GameManager : MonoBehaviour
         //SceneController.Instance.EnterStage(stageIdx);
         SceneController.Instance.EnterStage(6);
     }
+
+    public void PlayerReady()
+    {
+        stageReadyCount++;
+        if(stageReadyCount == NetworkManager.Instance.CurUsers)
+            UiController.Instance.StartCountDown();
+    }
     #endregion
 
     #region 일시정지
@@ -140,8 +148,9 @@ public class GameManager : MonoBehaviour
         SceneController.Instance.ExitStage();
         curMode = GameMode.Lobby;
 
-        // 일시정지 초기화
+        // 일시정지 및 변수 초기화
         isPaused = false;
+        stageReadyCount = 0;
     }
 
     [PunRPC]
@@ -168,8 +177,9 @@ public class GameManager : MonoBehaviour
         SceneController.Instance.ExitStage();
         NetworkManager.Instance.LeaveRoom();
 
-        // 일시정지 초기화
+        // 일시정지 및 변수 초기화
         isPaused = false;
+        stageReadyCount = 0;
     }
     #endregion
 
@@ -187,7 +197,7 @@ public class GameManager : MonoBehaviour
     void Survive_Count()
     {
         curSurvivors--;
-        if(curSurvivors == 1)
+        if(curSurvivors <= 1)
             StartCoroutine(Survive_MultiGame(!isOver)); // 게임오버 여부 반전해서 전달
     }
 
@@ -211,6 +221,7 @@ public class GameManager : MonoBehaviour
         // 일시정지 및 변수 초기화
         isPaused = false;
         curSurvivors = 0;
+        stageReadyCount = 0;
         isOver = false;
     }
     #endregion
