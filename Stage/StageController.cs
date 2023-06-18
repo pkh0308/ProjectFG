@@ -53,25 +53,13 @@ public class StageController : MonoBehaviour
     #region 가상 함수
     // 상속받는 클래스에서 구현
     // 싱글 플레이용 초기화 함수
-    protected virtual void Initialize_Single()
-    {
-
-    }
+    protected virtual void Initialize_Single() { }
     // 멀티 플레이용 초기화 함수
-    protected virtual void Initialize_Multi()
-    {
-
-    }
+    protected virtual void Initialize_Multi() { }
     // 게임 시작 시점에 호출하는 함수
-    protected virtual void OnGameStart()
-    {
-
-    }
+    protected virtual void OnGameStart() { }
     // 게임 종료 시점에 호출하는 함수
-    protected virtual void OnGameStop() 
-    {
-        
-    }
+    protected virtual void OnGameStop() { }
     #endregion
 
     void Start()

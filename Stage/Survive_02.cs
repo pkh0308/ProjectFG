@@ -26,14 +26,14 @@ public class Survive_02 : StageController
     // 스틱 회전 시작 및 가속 코루틴 호출
     protected override void OnGameStart()
     {
-        lowerStick.RotationStart(); Debug.Log("OnGameStart");
+        lowerStick.RotationStart(); 
         upperStick.RotationStart();
         StartCoroutine(AccelerateLowerStick());
     }
     // 스틱 회전 정지
     protected override void OnGameStop()
     {
-        lowerStick.RotationStop(); Debug.Log("OnGameStop");
+        lowerStick.RotationStop();
         upperStick.RotationStop();
     }
 
@@ -50,8 +50,8 @@ public class Survive_02 : StageController
         {
             yield return WfsManager.Instance.GetWaitForSeconds(fallDownInterval);
             randIdx = Random.Range(0, list.Count);
-            delayFallPlatforms[randIdx].StartFall();
-            list.Remove(randIdx);
+            delayFallPlatforms[list[randIdx]].StartFall();
+            list.RemoveAt(randIdx);
 
             count--;
         }

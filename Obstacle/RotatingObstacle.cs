@@ -44,6 +44,7 @@ public class RotatingObstacle : MonoBehaviour
         rigid.MoveRotation(rigid.rotation * deltaRotation);
     }
 
+    #region 외부 호출용
     public void RotationStop()
     {
         isRotating = false;
@@ -56,6 +57,15 @@ public class RotatingObstacle : MonoBehaviour
 
     public void Accelerate(float value)
     {
-        rotateDegree += value;
+        switch (myDir)
+        {
+            case RotateDirection.Clockwise:
+                rotateVelocity.y += value;
+                break;
+            case RotateDirection.Counter_Clockwise:
+                rotateVelocity.y -= value;
+                break;
+        }
     }
+    #endregion
 }

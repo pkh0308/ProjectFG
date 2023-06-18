@@ -5,9 +5,12 @@ public class DelayFallPlatform : MonoBehaviour
 {
     Rigidbody rigid;
     Collider myCol;
-    [SerializeField] float fallDelay;
 
+    [Header("Ãß¶ô")]
+    [SerializeField] float fallDelay;
     bool fallReady;
+
+    [Header("Èçµé¸²")]
     [SerializeField] float speed;
     [SerializeField] float amount;
     Vector3 posVec;
