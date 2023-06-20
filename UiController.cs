@@ -31,6 +31,7 @@ public class UiController : MonoBehaviour
         Instance = this;
     }
 
+    #region 타이머
     // 시간 제한 설정
     // -1이 입력된다면 타이머 X
     public void SetTimeLimit(int timeLimit)
@@ -38,6 +39,22 @@ public class UiController : MonoBehaviour
         this.timeLimit = timeLimit;
     }
 
+    // 타이머 설정
+    // timeLimit이 0보다 작다면(서바이벌 스테이지라면)
+    // 남은 인원 수 설정
+    void SetTimer()
+    {
+        timerSet.SetActive(true);
+        GameManager.Instance.StartTimer(timeLimit);
+    }
+
+    public void UpdateTimer(int time)
+    {
+        timerText.text = string.Format("{0:0}:{1:00}", time / 60, time % 60);
+    }
+    #endregion
+
+    #region 게임 종료
     // 승자라면 골인 UI,
     // 패자라면 게임오버 UI 활성화
     public void ResultOn(bool isWinner = true)
@@ -60,41 +77,16 @@ public class UiController : MonoBehaviour
     {
         timeOutSet.SetActive(act);
     }
+    #endregion
 
-    public void UpdateTimer(int time)
-    {
-        timerText.text = string.Format("{0:0}:{1:00}", time / 60, time % 60);
-    }
-
+    #region 카운트다운
     public void StartCountDown()
     {
         StartCoroutine(CountDown());
     }
 
-    // 타이머 설정
-    // timeLimit이 0보다 작다면(서바이벌 스테이지라면)
-    // 남은 인원 수 설정
-    void SetTimer()
-    {
-        timerSet.SetActive(true);
-        GameManager.Instance.StartTimer(timeLimit);
-    }
-
-    void SetUserCount()
-    {
-        maxUsers = NetworkManager.Instance.MaxUsers;
-        curUsers = maxUsers;
-
-        userCountText.text = $"{curUsers} / {maxUsers}";
-        userCountSet.SetActive(true);
-    }
-
-    public void MinusUserCount()
-    {
-        curUsers--;
-        userCountText.text = $"{curUsers} / {maxUsers}";
-    }
-    
+    // 스테이지 보여주기 후 카운트다운
+    // 카운트다운 종료와 동시에 일시정지 해제
     IEnumerator CountDown()
     {
         int count = 3;
@@ -118,4 +110,22 @@ public class UiController : MonoBehaviour
         yield return WfsManager.Instance.GetWaitForSeconds(2.0f);
         countDownSet.SetActive(false);
     }
+    #endregion
+
+    #region 유저 카운트
+    void SetUserCount()
+    {
+        maxUsers = NetworkManager.Instance.MaxUsers;
+        curUsers = maxUsers;
+
+        userCountText.text = $"{curUsers} / {maxUsers}";
+        userCountSet.SetActive(true);
+    }
+
+    public void MinusUserCount()
+    {
+        curUsers--;
+        userCountText.text = $"{curUsers} / {maxUsers}";
+    }
+    #endregion
 }

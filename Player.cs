@@ -28,7 +28,6 @@ public class Player : MonoBehaviour
     bool isPaused;
     Vector3 beforeRigidVel;
 
-
     // 발판 관련
     MovingPlatform movingPlat;
     RotatingPlatform rotatingPlat;
@@ -100,7 +99,6 @@ public class Player : MonoBehaviour
         animator.SetBool(AnimatorVar.isMoving.ToString(), inputVec.magnitude > 0);
         // 이동 방향으로 바라보기
         transform.LookAt(transform.position + inputVec);
-
 
         moveVec = inputVec * moveSpeed * Time.fixedDeltaTime;
         // 움직이는 발판 위일 경우
