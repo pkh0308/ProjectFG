@@ -6,8 +6,9 @@ public class CameraMove : MonoBehaviour
     Transform target;
 
     // 카메라 회전 관련
-    [Header("카메라 추적 대상")]
+    [Header("카메라 오프셋")]
     [SerializeField] Transform cameraOffset;
+    [SerializeField] Transform cameraRef;
 
     [Header("카메라 회전 속도")]
     [SerializeField] float hRotateSpeed;
@@ -15,16 +16,14 @@ public class CameraMove : MonoBehaviour
 
     [Header("최대 각도 제한")]
     [Range(10, 60)]
-    [SerializeField] float rotLimitMin;
+    [SerializeField] float rotateLimitMax;
     [Range(10, 60)]
-    [SerializeField] float rotLimitMax;
+    [SerializeField] float rotateLimitMin;
 
     Vector2 curLookVec;
     Vector2 befLookVec;
     float xOffset;
     float yOffset;
-    float sinRes;
-    float cosRes;
 
     bool rDown;
 
@@ -33,6 +32,9 @@ public class CameraMove : MonoBehaviour
     public void SetTarget(Transform t)
     {
         target = t;
+
+        cameraRef.transform.position = transform.position;
+        cameraRef.rotation = transform.rotation;
     }
 
     void OnRightDown()
@@ -59,31 +61,29 @@ public class CameraMove : MonoBehaviour
             return;
         }
 
-        sinRes = Mathf.Sin(transform.eulerAngles.y * Mathf.Deg2Rad);
-        cosRes = Mathf.Cos(transform.eulerAngles.y * Mathf.Deg2Rad);
-
-        xOffset = (curLookVec.x - befLookVec.x) * hRotateSpeed * Time.deltaTime;
+        xOffset = (curLookVec.x - befLookVec.x) * vRotateSpeed * Time.deltaTime;
         yOffset = (curLookVec.y - befLookVec.y) * hRotateSpeed * Time.deltaTime;
 
-        transform.RotateAround(target.position, Vector3.up, xOffset);
-        transform.RotateAround(target.position, Vector3.right, -yOffset * cosRes);
-        transform.RotateAround(target.position, Vector3.forward, yOffset * sinRes);
-        // 최대/최소 각도 제한
-        if (transform.eulerAngles.x > rotLimitMax)
+        cameraRef.position = transform.position;
+        // x축 기준 회전
+        // 범위 체크를 위해 사전 테스트용 트랜스폼을 먼저 회전
+        cameraRef.RotateAround(target.position, Vector3.right, -yOffset);
+        // 범위 내일 경우에만 회전 적용
+        if (cameraRef.eulerAngles.x > rotateLimitMin && cameraRef.eulerAngles.x < rotateLimitMax)
         {
-            transform.rotation = Quaternion.Euler(rotLimitMax - 0.1f, transform.eulerAngles.y, 0);
-            return;
+            transform.RotateAround(target.position, Vector3.right, -yOffset);
+            cameraOffset.RotateAround(Vector3.zero, Vector3.right, -yOffset);
         }
-        if (transform.eulerAngles.x < rotLimitMin)
-        {
-            transform.rotation = Quaternion.Euler(rotLimitMin + 0.1f, transform.eulerAngles.y, 0);
-            return;
-        }
+        cameraRef.rotation = transform.rotation;
 
-        // 오프셋도 동일하게 회전
+        // y축 기준 회전
+        transform.RotateAround(target.position, Vector3.up, xOffset);
         cameraOffset.RotateAround(Vector3.zero, Vector3.up, xOffset);
-        cameraOffset.RotateAround(Vector3.zero, Vector3.right, -yOffset * cosRes);
-        cameraOffset.RotateAround(Vector3.zero, Vector3.forward, yOffset * sinRes);
+
+        // rigidbody를 이용한 roateAround
+        //Quaternion q = Quaternion.AngleAxis(orbitSpeed, transform.forward);
+        //rb.MovePosition(q * (rb.transform.position - target.position) + target.position);
+        //rb.MoveRotation(rb.transform.rotation * q);
 
         // 현재 값을 이전 값으로 저장
         befLookVec = curLookVec;
@@ -97,7 +97,7 @@ public class CameraMove : MonoBehaviour
 
         if (transform.eulerAngles.z != 0)
         {
-            transform.rotation = 
+            transform.rotation =
                 Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, 0);
         }
     }
