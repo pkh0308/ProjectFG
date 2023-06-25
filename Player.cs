@@ -1,3 +1,4 @@
+using Photon.Pun;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,8 +18,8 @@ public class Player : MonoBehaviour
 
     // 넉백 관련
     [Header("Kunck Back Ref")]
-    [SerializeField] float knuckbackInterval;
-    bool inKnuckBack;
+    [SerializeField] float knockbackInterval;
+    bool inKnockBack;
 
     // 컴포넌트
     Rigidbody rigid;
@@ -39,7 +40,7 @@ public class Player : MonoBehaviour
         isJumping,
         doSlide,
         isGrapping,
-        onKnuckBack
+        onKnockBack
     }
 
     // 플레이어 상태
@@ -51,10 +52,29 @@ public class Player : MonoBehaviour
     }
     CurState curState;
 
+    // 네트워크 관련
+    PhotonView PV;
+    bool isMine;
+    bool isSingle;
+
     void Awake()
     {
         rigid = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+
+        // 멀티 게임이라면 PhotonView 초기화
+        if (GameManager.Instance.CurMode == GameManager.GameMode.MultiGame)
+        {
+            PV = GetComponent<PhotonView>();
+            isMine = PV.IsMine;
+            isSingle = false;
+        }
+        // 싱글 게임이라면 PhotonView 초기화 패스
+        else
+        {
+            isMine = true;
+            isSingle = true;
+        }
     }
 
     void Start()
@@ -91,16 +111,24 @@ public class Player : MonoBehaviour
 
     void PlayerMove()
     {
+        // 내 캐릭터가 아니라면 패스
+        if (!isMine)
+            return;
+
         // 일시정지 상태나 넉백중이라면 패스
-        if (GameManager.Instance.IsPaused || inKnuckBack)
+        if (GameManager.Instance.IsPaused || inKnockBack)
             return;
 
         // 걷기 애니메이션 설정
         animator.SetBool(AnimatorVar.isMoving.ToString(), inputVec.magnitude > 0);
-        // 이동 방향으로 바라보기
-        transform.LookAt(transform.position + inputVec);
 
-        moveVec = inputVec * moveSpeed * Time.fixedDeltaTime;
+        // 카메라 회전에 따른 이동방향 회전
+        moveVec = Quaternion.Euler(0, GameManager.Instance.CamAngle, 0) 
+                  * (moveSpeed * inputVec * Time.fixedDeltaTime);
+
+        // 이동 방향으로 바라보기
+        transform.LookAt(transform.position + moveVec);
+
         // 움직이는 발판 위일 경우
         if (movingPlat != null)
         {
@@ -132,7 +160,11 @@ public class Player : MonoBehaviour
     // 슬라이딩 중이라면 스킵
     void OnJump()
     {
-        if (GameManager.Instance.IsPaused)
+        // 내 캐릭터가 아니라면 패스
+        if (!isMine)
+            return;
+        // 일시정지 중이라면 패스
+        if (isPaused)
             return;
 
         // 회전 초기화
@@ -157,8 +189,8 @@ public class Player : MonoBehaviour
 
     void Slide()
     {
-        animator.SetTrigger(AnimatorVar.doSlide.ToString());
-        rigid.AddForce(moveVec.normalized * slidePower + Vector3.up * 2, ForceMode.Impulse);
+        SetTrigger(AnimatorVar.doSlide.ToString());
+        rigid.AddForce(moveVec.normalized * slidePower, ForceMode.Impulse);
         curState = CurState.IsSliding;
         StageSoundController.PlaySfx((int)StageSoundController.StageSfx.jump);
     }
@@ -167,6 +199,13 @@ public class Player : MonoBehaviour
     // 근처에 다른 플레이어가 있다면 붙잡음
     void OnFire()
     {
+        // 내 캐릭터가 아니라면 패스
+        if (!isMine)
+            return;
+        // 일시정지 중이라면 패스
+        if (isPaused)
+            return;
+
         // 점프 또는 슬라이딩 중이라면 패스
         if (curState == CurState.IsJumping || curState == CurState.IsSliding)
             return;
@@ -187,6 +226,8 @@ public class Player : MonoBehaviour
     #region 충돌 처리
     void OnTriggerEnter(Collider other)
     {
+        if (!isMine) return;
+
         // 추락 시 마지막 저장위치로 이동
         if (other.CompareTag(Tags.Fall))
         {
@@ -206,17 +247,24 @@ public class Player : MonoBehaviour
             StageSoundController.PlaySfx((int)StageSoundController.StageSfx.savePoint);
             return;
         }
-
         // 골인 지점 도착
         if (other.gameObject.CompareTag(Tags.Goal))
         {
             GameManager.Instance.Goal();
             return;
         }
+        // 아웃
+        if (other.gameObject.CompareTag(Tags.OutArea))
+        {
+            GameManager.Instance.PlayerOut();
+            return;
+        }
     }
 
     void OnCollisionEnter(Collision coll)
     {
+        if (!isMine) return;
+
         // 바닥 충돌 시 상태 변경
         if (coll.gameObject.CompareTag(Tags.Platform))
         {
@@ -257,6 +305,8 @@ public class Player : MonoBehaviour
 
     void OnCollisionExit(Collision coll)
     {
+        if (!isMine) return;
+
         // 움직이는 발판에서 나갈 경우
         if (coll.gameObject.CompareTag(Tags.MovingPlatform))
         {
@@ -295,22 +345,40 @@ public class Player : MonoBehaviour
     #endregion
 
     #region 넉백 처리
-    public void OnKnuckBack(Vector3 forceVec)
+    public void OnKnockBack(Vector3 forceVec)
     {
         // 이미 넉백중이라면 패스
-        if (inKnuckBack) return;
+        if (inKnockBack) return;
 
-        StartCoroutine(KnuckBack(forceVec));
+        StartCoroutine(KnockBack(forceVec));
     }
 
-    IEnumerator KnuckBack(Vector3 forceVec)
+    IEnumerator KnockBack(Vector3 forceVec)
     {
-        inKnuckBack = true;
-        animator.SetTrigger(AnimatorVar.onKnuckBack.ToString());
-        rigid.AddRelativeForce(forceVec, ForceMode.Impulse);
-        yield return WfsManager.Instance.GetWaitForSeconds(knuckbackInterval);
+        inKnockBack = true;
+        SetTrigger(AnimatorVar.onKnockBack.ToString());
+        rigid.AddForce(forceVec, ForceMode.Impulse);
+        yield return WfsManager.Instance.GetWaitForSeconds(knockbackInterval);
 
-        inKnuckBack = false;
+        inKnockBack = false;
+    }
+    #endregion
+
+    #region 애니메이션(트리거)
+    // 싱글 게임이라면 일반적인 SetTrigger 사용
+    // 멀티 게임이라면 RPC로 실행
+    void SetTrigger(string triggerName)
+    {
+        if (isSingle)
+            animator.SetTrigger(triggerName);
+        else
+            PV.RPC(nameof(RPC_SetTrigger), RpcTarget.All, triggerName);
+    }
+
+    [PunRPC]
+    void RPC_SetTrigger(string triggerName)
+    {
+        animator.SetTrigger(triggerName);
     }
     #endregion
 }

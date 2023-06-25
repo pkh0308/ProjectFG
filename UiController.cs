@@ -26,10 +26,36 @@ public class UiController : MonoBehaviour
     [SerializeField] GameObject countDownSet;
     [SerializeField] TextMeshProUGUI countDownText;
 
+    [Header("Exit")]
+    [SerializeField] GameObject exitSet;
+
     void Awake()
     {
         Instance = this;
     }
+
+    void Start()
+    {
+        CursorOff();
+    }
+
+    #region 마우스 커서 온오프
+    void CursorOn()
+    {
+        // 마우스 보이기
+        Cursor.visible = true;
+    }
+    void CursorOff()
+    {
+        // 마우스 숨기기
+        Cursor.visible = false;
+    }
+
+    void OnDestroy()
+    {
+        CursorOn();
+    }
+    #endregion
 
     #region 타이머
     // 시간 제한 설정
@@ -127,5 +153,40 @@ public class UiController : MonoBehaviour
         curUsers--;
         userCountText.text = $"{curUsers} / {maxUsers}";
     }
+    #endregion
+
+    #region 나가기 창
+    public bool SetExitPopUp()
+    {
+        if (GameManager.Instance.IsPaused)
+            return true;
+
+        // 열린 상태라면 닫기
+        if(exitSet.activeSelf)
+        {
+            exitSet.SetActive(false);
+            CursorOff();
+            return true;
+        }
+        // 닫힌 상태라면 열기
+        else
+        {
+            exitSet.SetActive(true);
+            CursorOn();
+            return false;
+        }
+    }
+
+    public void Btn_Exit()
+    {
+        GameManager.Instance.PlayerExit();
+    }
+
+    public void Btn_ExitCancle()
+    {
+        exitSet.SetActive(false);
+        CursorOff();
+    }
+
     #endregion
 }

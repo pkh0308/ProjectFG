@@ -47,6 +47,15 @@ public class GameManager : MonoBehaviour
     public GameMode CurMode { get { return curMode; } }
     public bool IsSingleGame { get { return curMode == GameMode.SingleGame; } }
 
+    // 회전각 전달용
+    float camAngle;
+    public float CamAngle { get { return camAngle; } }
+
+    public void SetCamAngle(float angle)
+    {
+        camAngle = angle;
+    }
+
     public void SetMode(GameMode mode)
     {
         curMode = mode;
@@ -70,6 +79,7 @@ public class GameManager : MonoBehaviour
     void StartSingleGame(int stageIdx)
     {
         curMode = GameMode.SingleGame;
+        isPaused = true;
         SceneController.Instance.EnterStage(stageIdx);
     }
 
@@ -150,7 +160,6 @@ public class GameManager : MonoBehaviour
 
         // 일시정지 및 변수 초기화
         isPaused = false;
-        stageReadyCount = 0;
     }
 
     [PunRPC]
@@ -190,11 +199,11 @@ public class GameManager : MonoBehaviour
         UiController.Instance.ResultOn(false);
         UiController.Instance.MinusUserCount();
 
-        PV.RPC(nameof(Survive_Count), RpcTarget.All);
+        PV.RPC(nameof(Survive_Minus), RpcTarget.All);
     }
 
     [PunRPC]
-    void Survive_Count()
+    void Survive_Minus()
     {
         curSurvivors--;
         if(curSurvivors <= 1)
@@ -223,6 +232,23 @@ public class GameManager : MonoBehaviour
         curSurvivors = 0;
         stageReadyCount = 0;
         isOver = false;
+    }
+    #endregion
+
+    #region 중도 퇴장
+    public void PlayerExit()
+    {
+        // 멀티 시 처리
+        // 나머지 플레이어들에게 생존자 -1 카운트
+        if(curMode == GameMode.MultiGame)
+            PV.RPC(nameof(Survive_Minus), RpcTarget.Others);
+        
+        // 로비 이동
+        SceneController.Instance.ExitStage();
+        curMode = GameMode.Lobby;
+
+        // 일시정지 및 변수 초기화
+        isPaused = false;
     }
     #endregion
 

@@ -111,14 +111,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #region 오브젝트 생성
     // 캐릭터 생성
     // 플레이어의 인덱스에 따라 위치 조절
-    public GameObject InstantiateCharacter(Transform[] positions)
+    public GameObject InstantiateCharacter(Transform[] startTransform)
     {
         int idx = GetMyIdx();
         if (idx < 0)
             return null;
 
         string playerName = "Player" + idx.ToString();
-        return PN.Instantiate(playerName, positions[idx].position, Quaternion.identity);
+        Camera.main.GetComponent<CameraMove>().SetInitialRotation(startTransform[idx].rotation);
+        return PN.Instantiate(playerName, startTransform[idx].position, startTransform[idx].rotation);
     }
 
     // 해당 이름의 오브젝트 생성

@@ -24,34 +24,29 @@ public class CameraMove : MonoBehaviour
     Vector2 befLookVec;
     float xOffset;
     float yOffset;
-
-    bool rDown;
+    bool canRotate = true;
 
     // 외부 호출용 함수
     // 추적 대상(타겟) 설정
     public void SetTarget(Transform t)
     {
         target = t;
-
-        cameraRef.transform.position = transform.position;
-        cameraRef.rotation = transform.rotation;
     }
 
-    void OnRightDown()
+    #region 카메라 회전
+    // 외부 호출용(StageController)
+    // 초기 시작 지점에서 카메라 및 오프셋 회전(y축)
+    public void SetInitialRotation(Quaternion initialRot)
     {
-        rDown = true;
+        transform.rotation = Quaternion.Euler(transform.rotation.x, initialRot.y, transform.rotation.z);
+        cameraOffset.rotation = Quaternion.Euler(cameraOffset.rotation.x, initialRot.y, cameraOffset.rotation.z);
     }
 
-    void OnRightUp()
-    {
-        rDown = false;
-        befLookVec = Vector2.zero;
-    }
-
+    // 마우스 포지션에 따른 카메라 회전
     void OnLook(InputValue value)
     {
-        // 타겟이 없거나 마우스 오른쪽 클릭중이 아니라면 패스
-        if (target == null || rDown == false) return;
+        // 타겟이 없거나 회전 불가능할 경우 패스
+        if (target == null || !canRotate) return;
 
         curLookVec = value.Get<Vector2>();
         // 저장된 이전 값이 없다면 저장하고 패스
@@ -85,7 +80,16 @@ public class CameraMove : MonoBehaviour
         //rb.MovePosition(q * (rb.transform.position - target.position) + target.position);
         //rb.MoveRotation(rb.transform.rotation * q);
 
-        // 현재 값을 이전 값으로 저장
+        // z축 회전 제한
+        if (transform.eulerAngles.z != 0)
+        {
+            transform.rotation =
+                Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, 0);
+        }
+
+        GameManager.Instance.SetCamAngle(transform.eulerAngles.y);
+
+        // 현재 값을 이전 값으로 저장 
         befLookVec = curLookVec;
     }
 
@@ -94,11 +98,11 @@ public class CameraMove : MonoBehaviour
         if (target == null) return;
 
         transform.position = target.position + cameraOffset.position;
+    }
+    #endregion
 
-        if (transform.eulerAngles.z != 0)
-        {
-            transform.rotation =
-                Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, 0);
-        }
+    void OnEscape()
+    {
+        canRotate = UiController.Instance.SetExitPopUp();
     }
 }
