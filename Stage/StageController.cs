@@ -127,7 +127,12 @@ public class StageController : MonoBehaviour
         }
         yield return WfsManager.Instance.GetWaitForSeconds(endInterval);
 
+        // 카메라 타겟 설정 및 초기 회전
         mainCamera.SetTarget(target);
+        if(GameManager.Instance.CurMode == GameManager.GameMode.MultiGame)
+            Camera.main.GetComponent<CameraMove>().SetRotation(
+                startPos[NetworkManager.Instance.GetMyIdx()].eulerAngles.y);
+
         // 싱글 플레이 시 바로 카운트다운 시작
         // 멀티플레이일 경우 준비된 유저 카운트
         if (isSingleGame)

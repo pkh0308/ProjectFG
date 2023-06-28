@@ -1,12 +1,17 @@
 using Photon.Pun;
 using System.Collections;
-using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class LobbyUIController : MonoBehaviour
 {
+    [Header("User Name")]
+    [SerializeField] GameObject nameEditSet;
+    [SerializeField] TextMeshProUGUI userNameText;
+    [SerializeField] TMP_InputField nameField;
+    string myName;
+
     [Header("Single Play")]
     [SerializeField] GameObject stageSelectSet;
 
@@ -25,7 +30,6 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] int chatRefreshInterval;
     int curChatIdx;
     int curChatTime;
-    string myName;
     Coroutine chatRoutine;
 
     // 포톤 네트워크
@@ -46,8 +50,24 @@ public class LobbyUIController : MonoBehaviour
         
         curChatIdx = -1;
         curChatTime = 0;
+        // 임시 유저 네임
         myName = "player" + Random.Range(1000, 10000).ToString();
+        userNameText.text = myName;
     }
+
+    #region 유저 네임 변경
+    public void NameEditSet()
+    {
+        nameEditSet.SetActive(!nameEditSet.activeSelf);
+    }
+
+    public void EditUserName()
+    {
+        myName = nameField.text;
+        userNameText.text = myName;
+        nameEditSet.SetActive(false);
+    }
+    #endregion
 
     #region 싱글플레이
     public void StageSelectSet(bool act)

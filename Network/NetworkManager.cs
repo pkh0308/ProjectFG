@@ -118,7 +118,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             return null;
 
         string playerName = "Player" + idx.ToString();
-        Camera.main.GetComponent<CameraMove>().SetInitialRotation(startTransform[idx].rotation);
         return PN.Instantiate(playerName, startTransform[idx].position, startTransform[idx].rotation);
     }
 
