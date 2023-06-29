@@ -1,5 +1,7 @@
 using Photon.Pun;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +16,13 @@ public class LobbyUIController : MonoBehaviour
 
     [Header("Single Play")]
     [SerializeField] GameObject stageSelectSet;
+    [SerializeField] GameObject stageInfoSet;
+    [SerializeField] TextMeshProUGUI stageNameText;
+    [SerializeField] TextMeshProUGUI stageDescriptionText;
+    [SerializeField] TextMeshProUGUI stageTypeText;
+    int stageIdx = -1;
+    public int StageIdx { get{ return stageIdx; } }
+    List<StageData> stageDataList;
 
     [Header("Multi Play")]
     [SerializeField] GameObject multiWaitSet;
@@ -37,6 +46,7 @@ public class LobbyUIController : MonoBehaviour
 
     public static LobbyUIController Instance { get; private set; }
 
+    #region 초기화
     void Awake()
     {
         Instance = this;
@@ -53,7 +63,40 @@ public class LobbyUIController : MonoBehaviour
         // 임시 유저 네임
         myName = "player" + Random.Range(1000, 10000).ToString();
         userNameText.text = myName;
+
+        // 스테이지 정보 읽어오기
+        ReadStageDatas();
     }
+
+    void ReadStageDatas()
+    {
+        stageDataList = new List<StageData>(10);
+
+        //csv 파일에서 데이터 읽어오기
+        TextAsset stageDatas = Resources.Load("StageDatas") as TextAsset;
+        StringReader stageDataReader = new StringReader(stageDatas.text);
+
+        if (stageDataReader == null)
+        {
+            Debug.Log("stageDataReader is null");
+            return;
+        }
+        //첫줄 스킵(변수 이름 라인)
+        string line = stageDataReader.ReadLine();
+        if (line == null) return;
+
+        string[] datas;
+        line = stageDataReader.ReadLine();
+        while (line.Length > 1)
+        {
+            datas = line.Split(',');
+            stageDataList.Add(new StageData(datas[0], datas[1], datas[2], datas[3]));
+            // 다음 줄 읽기
+            line = stageDataReader.ReadLine();
+        }
+        stageDataReader.Close();
+    }
+    #endregion
 
     #region 유저 네임 변경
     public void NameEditSet()
@@ -73,6 +116,35 @@ public class LobbyUIController : MonoBehaviour
     public void StageSelectSet(bool act)
     {
         stageSelectSet.SetActive(act);
+
+        // 정보창 닫기 및 스테이지 인덱스 초기화
+        if(act == false)
+        {
+            stageInfoSet.SetActive(false);
+            stageIdx = -1;
+        }
+    }
+
+    public void StageInfoSet(int idx)
+    {
+        stageIdx = idx;
+        // 첫번째 스테이지 인덱스가 리스트 첫번째 인덱스(0)가 되도록 수정
+        idx -= SceneController.Instance.FirstStageIdx;
+
+        // 스테이지 이름
+        stageNameText.text = stageDataList[idx].stageName;
+        // 스테이지 설명
+        stageDescriptionText.text = stageDataList[idx].stageDescription;
+        // 스테이지 타입(타입 / 시간 제한)
+        string timeLimit = stageDataList[idx].timeLimit > 0 ? stageDataList[idx].timeLimit.ToString() + "초" : "없음";
+        stageTypeText.text = $"(스테이지 타입: {stageDataList[idx].stageType} / 제한 시간: {timeLimit})";
+
+        stageInfoSet.SetActive(true);
+    }
+
+    public void EnterStage()
+    {
+        GameManager.Instance.GameStart(GameManager.GameMode.SingleGame, stageIdx);
     }
     #endregion
 

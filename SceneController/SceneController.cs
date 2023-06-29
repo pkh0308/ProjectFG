@@ -33,6 +33,8 @@ public class SceneController : MonoBehaviour
     // 스테이지 씬 추가 혹은 순서 변경 시 수정 요망
     int firstStageIdx = Convert.ToInt32(SceneIndex.STAGE_RUN_01);
     int lastStageIdx = Convert.ToInt32(SceneIndex.STAGE_SURVIVE_02);
+    public int FirstStageIdx { get { return firstStageIdx; } }
+    public int LastStageIdx { get { return lastStageIdx; } }
 
     void Awake()
     {

@@ -1,4 +1,5 @@
 using UnityEngine;
+using static StageSoundController;
 
 public class LobbyBtnController : MonoBehaviour
 {
@@ -26,7 +27,14 @@ public class LobbyBtnController : MonoBehaviour
     }
     public void Btn_StageSelect(int stageIdx)
     {
-        GameManager.Instance.GameStart(GameManager.GameMode.SingleGame, stageIdx);
+        LobbyUIController.Instance.StageInfoSet(stageIdx);
+    }
+    public void Btn_EnterStage()
+    {
+        int stageIdx = LobbyUIController.Instance.StageIdx;
+
+        if(stageIdx > 0)
+            GameManager.Instance.GameStart(GameManager.GameMode.SingleGame, stageIdx);
     }
 
     // 멀티플레이
