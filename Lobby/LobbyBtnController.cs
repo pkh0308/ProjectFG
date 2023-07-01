@@ -1,9 +1,14 @@
 using UnityEngine;
-using static StageSoundController;
 
 public class LobbyBtnController : MonoBehaviour
 {
     [SerializeField] Btn_Ready btn_Ready;
+
+    // 랜덤 애니메이션
+    public void Btn_RandomAnim()
+    {
+        LobbyUIController.Instance.RandomAnimation();
+    }
 
     // 유저 네임 변경
     public void Btn_NameEditSet()

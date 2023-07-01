@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class LobbyUIController : MonoBehaviour
 {
+    [SerializeField] LobbyModel lobbyModel;
+
     [Header("User Name")]
     [SerializeField] GameObject nameEditSet;
     [SerializeField] TextMeshProUGUI userNameText;
@@ -60,8 +62,9 @@ public class LobbyUIController : MonoBehaviour
         
         curChatIdx = -1;
         curChatTime = 0;
-        // 임시 유저 네임
-        myName = "player" + Random.Range(1000, 10000).ToString();
+        // 저장된 유저 아이디가 있다면 해당값 불러오기
+        // 없다면(null) 임시 유저 아이디 작성
+        myName = NetworkManager.Instance.MyName ?? "player" + Random.Range(1000, 10000).ToString();
         userNameText.text = myName;
 
         // 스테이지 정보 읽어오기
@@ -81,13 +84,13 @@ public class LobbyUIController : MonoBehaviour
             Debug.Log("stageDataReader is null");
             return;
         }
-        //첫줄 스킵(변수 이름 라인)
+        // 첫줄 스킵(변수 이름 라인)
         string line = stageDataReader.ReadLine();
         if (line == null) return;
 
         string[] datas;
         line = stageDataReader.ReadLine();
-        while (line.Length > 1)
+        while (line != null)
         {
             datas = line.Split(',');
             stageDataList.Add(new StageData(datas[0], datas[1], datas[2], datas[3]));
@@ -106,8 +109,12 @@ public class LobbyUIController : MonoBehaviour
 
     public void EditUserName()
     {
-        myName = nameField.text;
-        userNameText.text = myName;
+        // 입력란이 공백이 아니라면 수정
+        if (nameField.text.Trim() != "")
+        {
+            myName = nameField.text;
+            userNameText.text = myName;
+        }
         nameEditSet.SetActive(false);
     }
     #endregion
@@ -276,4 +283,9 @@ public class LobbyUIController : MonoBehaviour
         curChatIdx--;
     }
     #endregion
+
+    public void RandomAnimation()
+    {
+        lobbyModel.RandomAnim();
+    }
 }

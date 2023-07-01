@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 using Random = UnityEngine.Random;
@@ -8,7 +7,8 @@ public class LobbyModel : MonoBehaviour
     Animator animator;
 
     [SerializeField] float animInterval;
-    [SerializeField] string[] animTriggers;
+    string[] animTriggers;
+    string idle = "Idle";
 
     void Awake()
     {
@@ -17,26 +17,23 @@ public class LobbyModel : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(AnimationLoop());
+        // 애니메이터의 파라미터들 이름 저장해두기
+        AnimatorControllerParameter[] parameters = animator.parameters;
+        animTriggers = new string[parameters.Length];
+
+        for (int i = 0; i < parameters.Length; ++i)
+        {
+            animTriggers[i] = parameters[i].name;
+        }
     }
 
-    IEnumerator AnimationLoop()
+    public void RandomAnim()
     {
-        bool isIdle = true;
-
-        while(gameObject.activeSelf)
+        // 현재 애니메이션이 Idle일때만 실행
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName(idle))
         {
-            yield return WfsManager.Instance.GetWaitForSeconds(animInterval);
-
-            // Idle 상태가 아니라면 랜덤 애니메이션 실행
-            if (isIdle)
-            {
-                int idx = Random.Range(0, animTriggers.Length);
-                animator.SetTrigger(animTriggers[idx]);
-                isIdle = false;
-            }
-            else
-                isIdle = true;
-        }
+            int idx = Random.Range(0, animTriggers.Length);
+            animator.SetTrigger(animTriggers[idx]);
+        } 
     }
 }

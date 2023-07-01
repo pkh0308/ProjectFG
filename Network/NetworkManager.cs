@@ -16,6 +16,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     PhotonView PV;
     int curReadyUsers;
 
+    // 유저 네임
+    string myName;
+    public string MyName { get { return myName; } }
+    public void SaveMyName(string name) { myName = name; }
+
     void Awake()
     {
         Instance = this;
