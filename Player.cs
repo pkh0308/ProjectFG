@@ -32,6 +32,7 @@ public class Player : MonoBehaviour
     // 발판 관련
     MovingPlatform movingPlat;
     RotatingPlatform rotatingPlat;
+    Vector3 befVelocity;
 
     // 애니메이터 변수 관리용
     enum AnimatorVar
@@ -57,6 +58,7 @@ public class Player : MonoBehaviour
     bool isMine;
     bool isSingle;
 
+    #region 초기화
     void Awake()
     {
         rigid = GetComponent<Rigidbody>();
@@ -83,7 +85,11 @@ public class Player : MonoBehaviour
         curState = CurState.OnPlatform;
 
         isGrapping = false;
+        inKnockBack = false;
     }
+    #endregion
+
+    #region Update / FixedUpdate
 
     // GameManager의 일시정지 여부 체크
     void Update()
@@ -129,22 +135,10 @@ public class Player : MonoBehaviour
         // 이동 방향으로 바라보기
         transform.LookAt(transform.position + moveVec);
 
-        // 움직이는 발판 위일 경우
-        if (movingPlat != null)
-        {
-            rigid.MovePosition(rigid.position + moveVec + movingPlat.GetMoveVec());
-            return;
-        }
-        // 회전 발판 위일 경우
-        if (rotatingPlat != null)
-        {
-            rigid.MovePosition(rigid.position + moveVec + rotatingPlat.GetRotateVec(transform.position)); 
-            return;
-        }
-
-        // 일반 발판
+        // 일반 이동
         rigid.MovePosition(rigid.position + moveVec);
     }
+    #endregion
 
     #region 플레이어 입력
     // wasd 또는 ↑←↓→
@@ -232,7 +226,7 @@ public class Player : MonoBehaviour
         if (other.CompareTag(Tags.Fall))
         {
             transform.position = lastPos;
-            rigid.angularVelocity = Vector3.zero;
+            rigid.velocity = Vector3.zero;
             StageSoundController.PlaySfx((int)StageSoundController.StageSfx.reset);
             return;
         }
@@ -272,7 +266,7 @@ public class Player : MonoBehaviour
             return;
         }
 
-        // 움직이는 발판 위에 있는 경우
+        // 움직이는 발판에 착지한 경우
         if (coll.gameObject.CompareTag(Tags.MovingPlatform))
         {
             OnPlatform();
@@ -280,7 +274,7 @@ public class Player : MonoBehaviour
             return;
         }
 
-        // 회전 발판 위에 있는 경우
+        // 회전 발판에 착지한 경우
         if (coll.gameObject.CompareTag(Tags.RotatingPlatform))
         {
             OnPlatform();

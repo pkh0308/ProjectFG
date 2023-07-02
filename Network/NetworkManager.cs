@@ -17,7 +17,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     int curReadyUsers;
 
     // 유저 네임
-    string myName;
+    string myName = null;
     public string MyName { get { return myName; } }
     public void SaveMyName(string name) { myName = name; }
 

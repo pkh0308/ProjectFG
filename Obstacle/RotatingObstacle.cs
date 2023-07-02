@@ -32,11 +32,11 @@ public class RotatingObstacle : MonoBehaviour
         {
             case RotateDirection.Clockwise:
                 rotateVelocity = new Vector3(0, rotateDegree, 0);
-                rotationDir = Quaternion.Euler(0, -90, 0);
+                rotationDir = Quaternion.Euler(0, 90, 0);
                 break;
             case RotateDirection.Counter_Clockwise:
                 rotateVelocity = new Vector3(0, -rotateDegree, 0);
-                rotationDir = Quaternion.Euler(0, 90, 0);
+                rotationDir = Quaternion.Euler(0, -90, 0);
                 break;
         }
     }
@@ -85,8 +85,7 @@ public class RotatingObstacle : MonoBehaviour
 
     Vector3 KnockBack(Vector3 targetPos)
     {
-        Vector3 dirVec = rotationDir * (transform.position - targetPos); 
-        dirVec = dirVec.normalized * knockbackPower;
-        return dirVec + (Vector3.up * 2);
+        Vector3 dirVec = rotationDir * (targetPos - transform.position);
+        return dirVec.normalized * knockbackPower;
     }
 }

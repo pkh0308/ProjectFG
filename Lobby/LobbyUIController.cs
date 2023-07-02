@@ -63,8 +63,14 @@ public class LobbyUIController : MonoBehaviour
         curChatIdx = -1;
         curChatTime = 0;
         // 저장된 유저 아이디가 있다면 해당값 불러오기
-        // 없다면(null) 임시 유저 아이디 작성
-        myName = NetworkManager.Instance.MyName ?? "player" + Random.Range(1000, 10000).ToString();
+        if(NetworkManager.Instance.MyName != null)
+            myName = NetworkManager.Instance.MyName;
+        // 없다면 임시 유저 아이디 작성 후 저장
+        else
+        {
+            myName = "player" + Random.Range(1000, 10000).ToString();
+            NetworkManager.Instance.SaveMyName(myName);
+        }
         userNameText.text = myName;
 
         // 스테이지 정보 읽어오기
@@ -114,6 +120,7 @@ public class LobbyUIController : MonoBehaviour
         {
             myName = nameField.text;
             userNameText.text = myName;
+            NetworkManager.Instance.SaveMyName(myName);
         }
         nameEditSet.SetActive(false);
     }
