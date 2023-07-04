@@ -1,79 +1,68 @@
-using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
-using Photon.Pun;
+using UnityEngine;
+
+using Random = UnityEngine.Random;
 
 public class Survive_01 : StageController
 {
-    [Header("랜덤 발판 설정")]
-    [SerializeField] TrueOrFalsePlatform[] tofPlatforms;
-    [SerializeField] int column;
+    [Header("막대 회전")]
+    [SerializeField] RotatingObstacle lowerStick;
+    [SerializeField] RotatingObstacle upperStick;
+    [SerializeField] float acclerateInterval;
+    [SerializeField] float acclerateDegree;
 
-    protected override void Initialize_Single()
-    {
-        // 랜덤 루트 설정
-        // 5개의 발판 중 하나는 true 발판으로 설정
-        // 이전 발판 1칸 앞 발판과 새로 지정한 발판 사이는 true 발판으로 설정
-        Queue<int> que = new Queue<int>();
-        for (int i = 0; i < tofPlatforms.Length; i += column)
-        {
-            int idx = Random.Range(0, 5);
-
-            // 첫행이 아닐 경우
-            if (que.Count > 0)
-            {
-                int high = que.Peek() > idx ? que.Peek() : idx;
-                int low = que.Peek() < idx ? que.Peek() : idx;
-                for (int j = low; j <= high; j++)
-                    tofPlatforms[i + j].SetTrue();
-                // 큐 비우기
-                que.Dequeue();
-            }
-            // 첫 행일 경우
-            else
-                tofPlatforms[i + idx].SetTrue();
-
-            que.Enqueue(idx);
-        }
-    }
+    [Header("발판 추락")]
+    [SerializeField] DelayFallPlatform[] delayFallPlatforms;
+    [SerializeField] float fallDownInterval;
+    int count;
 
     protected override void Initialize_Multi()
     {
-        // 마스터 클라이언트에서만 실행
-        // 발판 설정 부분은 RPC로 실행하여 다른 클라이언트들과 동기화
-        if (NetworkManager.Instance.IsMaster == false)
-            return;
+        count = delayFallPlatforms.Length;
+        StartCoroutine(FallDown());
+    }
 
-        // 랜덤 루트 설정
-        // 5개의 발판 중 하나는 true 발판으로 설정
-        // 이전 발판 1칸 앞 발판과 새로 지정한 발판 사이는 true 발판으로 설정
-        Queue<int> que = new Queue<int>();
-        for(int i = 0; i < tofPlatforms.Length; i += column) 
+    // 스틱 회전 시작 및 가속 코루틴 호출
+    protected override void OnGameStart()
+    {
+        lowerStick.RotationStart(); 
+        upperStick.RotationStart();
+        StartCoroutine(AccelerateLowerStick());
+    }
+    // 스틱 회전 정지
+    protected override void OnGameStop()
+    {
+        lowerStick.RotationStop();
+        upperStick.RotationStop();
+    }
+
+    IEnumerator FallDown()
+    {
+        List<int> list = new List<int>(delayFallPlatforms.Length);
+        for(int i = 0; i < delayFallPlatforms.Length; i++)
+            list.Add(i);
+
+        // fallDownInterval 만큼 대기 후 떨어트릴 플랫폼 지정
+        // 최소 2개는 남겨두도록 설정
+        int randIdx;
+        while (count > 2)
         {
-            int idx = Random.Range(0, 5);
+            yield return WfsManager.Instance.GetWaitForSeconds(fallDownInterval);
+            randIdx = Random.Range(0, list.Count);
+            delayFallPlatforms[list[randIdx]].StartFall();
+            list.RemoveAt(randIdx);
 
-            // 첫행이 아닐 경우
-            if(que.Count > 0)
-            {
-                int high = que.Peek() > idx ? que.Peek() : idx;
-                int low = que.Peek() < idx ? que.Peek() : idx;
-                PV.RPC(nameof(SetTrue), RpcTarget.All, i, low, high);
-                // 큐 비우기
-                que.Dequeue();
-            }
-            // 첫 행일 경우
-            else
-                PV.RPC(nameof(SetTrue), RpcTarget.All, i, idx, idx);
-
-            que.Enqueue(idx);
+            count--;
         }
     }
 
-    // 진짜 발판으로 설정
-    // 모든 클라이언트에서 동기화되도록 RPC로 실행
-    [PunRPC]
-    void SetTrue(int idx, int low, int high)
+    IEnumerator AccelerateLowerStick()
     {
-        for (int i = low; i <= high; i++)
-            tofPlatforms[idx + i].SetTrue();
+        while(!GameManager.Instance.IsPaused)
+        {
+            yield return WfsManager.Instance.GetWaitForSeconds(acclerateInterval);
+            lowerStick.Accelerate(acclerateDegree);
+        }
     }
 }

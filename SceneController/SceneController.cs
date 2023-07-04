@@ -25,14 +25,15 @@ public class SceneController : MonoBehaviour
         LOBBY,
         PLAYER,
         STAGE_RUN_01,
-        STAGE_SURVIVE_01,
-        STAGE_SURVIVE_02
+        STAGE_RUN_02,
+        STAGE_RUN_03,
+        STAGE_SURVIVE_01
     }
 
     // Build Index 상의 첫번째 스테이지와 마지막 스테이지
     // 스테이지 씬 추가 혹은 순서 변경 시 수정 요망
     int firstStageIdx = Convert.ToInt32(SceneIndex.STAGE_RUN_01);
-    int lastStageIdx = Convert.ToInt32(SceneIndex.STAGE_SURVIVE_02);
+    int lastStageIdx = Convert.ToInt32(SceneIndex.STAGE_SURVIVE_01);
     public int FirstStageIdx { get { return firstStageIdx; } }
     public int LastStageIdx { get { return lastStageIdx; } }
 

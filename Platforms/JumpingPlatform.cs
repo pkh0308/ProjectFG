@@ -16,10 +16,10 @@ public class JumpingPlatform : MonoBehaviour
         // 플레이어 외 패스
         if (!coll.gameObject.CompareTag(Tags.Player))
             return;
-        // 발판 위로 착지한게 아니라면 패스
-        //if (coll.transform.position.y < transform.position.y)
-        //    return;
 
-        coll.gameObject.GetComponent<Rigidbody>().AddForce(powVec, ForceMode.Impulse);
+        // 기존 velocity 초기화 후 AddForce
+        Rigidbody rigid = coll.gameObject.GetComponent<Rigidbody>();
+        rigid.velocity = Vector3.zero;
+        rigid.AddForce(powVec, ForceMode.Impulse);
     }
 }

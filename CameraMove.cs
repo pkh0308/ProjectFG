@@ -66,8 +66,8 @@ public class CameraMove : MonoBehaviour
             return;
         }
 
-        xOffset = (curLookVec.x - befLookVec.x) * vRotateSpeed * Time.deltaTime;
-        yOffset = (curLookVec.y - befLookVec.y) * hRotateSpeed * Time.deltaTime;
+        xOffset = (curLookVec.x - befLookVec.x) * hRotateSpeed * Time.deltaTime;
+        yOffset = (curLookVec.y - befLookVec.y) * vRotateSpeed * Time.deltaTime;
 
         cameraRef.position = transform.position;
         // x축 기준 회전
