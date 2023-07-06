@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
+    // 시간 관련
     [SerializeField] float goalInInterval;
     [SerializeField] float timeOutInterval;
     int curTime;
@@ -34,6 +35,10 @@ public class GameManager : MonoBehaviour
 
     // 코루틴 관리용 변수
     Coroutine timerRoutine;
+
+    // 승패 확인(결과 화면용)
+    bool isWinner;
+    public bool IsWinner { get { return isWinner; } }
 
     // 현재 게임 상태
     public enum GameMode
@@ -144,6 +149,7 @@ public class GameManager : MonoBehaviour
     {
         // 일시정지
         isPaused = true;
+        isWinner = true;
         StopCoroutine(timerRoutine);
 
         StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
@@ -154,12 +160,8 @@ public class GameManager : MonoBehaviour
         yield return WfsManager.Instance.GetWaitForSeconds(goalInInterval);
         UiController.Instance.ResultOff();
 
-        // 로비 이동
+        // 결과 화면으로 이동
         SceneController.Instance.ExitStage();
-        curMode = GameMode.Lobby;
-
-        // 일시정지 및 변수 초기화
-        isPaused = false;
     }
 
     [PunRPC]
@@ -172,6 +174,7 @@ public class GameManager : MonoBehaviour
     {
         // 일시정지
         isPaused = true;
+        this.isWinner = isWinner;
         StopCoroutine(timerRoutine);
 
         StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
@@ -182,11 +185,15 @@ public class GameManager : MonoBehaviour
         yield return WfsManager.Instance.GetWaitForSeconds(goalInInterval);
         UiController.Instance.ResultOff();
 
-        // 로비 이동 및 룸 나가기
+        // 결과 화면으로 이동
         SceneController.Instance.ExitStage();
-        NetworkManager.Instance.LeaveRoom();
+    }
 
-        // 일시정지 및 변수 초기화
+    // 결과 화면 퇴장 시 호출
+    // 승자 여부, 일시정지 여부 등 초기화
+    public void Reinitialize()
+    {
+        isWinner = false;
         isPaused = false;
         stageReadyCount = 0;
     }
@@ -278,6 +285,7 @@ public class GameManager : MonoBehaviour
     {
         // 일시정지
         isPaused = true;
+        isWinner = false;
 
         StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
         StageSoundController.PlaySfx((int)StageSoundController.StageSfx.gameOver);
@@ -287,15 +295,10 @@ public class GameManager : MonoBehaviour
         yield return WfsManager.Instance.GetWaitForSeconds(timeOutInterval);
         UiController.Instance.ActiveTimeOutSet(false);
 
-        // 로비 이동 및 룸 나가기(멀티플레이)
-        curMode = GameMode.Lobby;
+        // 결과 화면 이동
         SceneController.Instance.ExitStage();
-        if(curMode == GameMode.MultiGame)
-            NetworkManager.Instance.LeaveRoom();
-        
-
-        // 일시정지 초기화
-        isPaused = false;
+        if (IsSingleGame)
+            curMode = GameMode.Lobby;
     }
     #endregion
 }

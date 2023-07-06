@@ -14,7 +14,7 @@ public class Player : MonoBehaviour
     Vector3 lastPos;
 
     // 그랩 여부
-    bool isGrapping;
+    bool isGrabbing;
 
     // 넉백 관련
     [Header("Kunck Back Ref")]
@@ -40,7 +40,7 @@ public class Player : MonoBehaviour
         isMoving,
         isJumping,
         doSlide,
-        isGrapping,
+        isGrabbing,
         onKnockBack
     }
 
@@ -84,7 +84,7 @@ public class Player : MonoBehaviour
         lastPos = Vector3.zero;
         curState = CurState.OnPlatform;
 
-        isGrapping = false;
+        isGrabbing = false;
         inKnockBack = false;
     }
     #endregion
@@ -108,6 +108,9 @@ public class Player : MonoBehaviour
             PlayerStopOff();
             return;
         }
+
+        if (Input.GetKeyDown(KeyCode.Return))
+            animator.SetTrigger("doTest");
     }
 
     void FixedUpdate()
@@ -204,15 +207,15 @@ public class Player : MonoBehaviour
         if (curState == CurState.IsJumping || curState == CurState.IsSliding)
             return;
 
-        Grap();
+        Grab();
     }
 
-    void Grap()
+    void Grab()
     {
         // ToDo - 붙잡은 플레이어 이동속도 감소 처리
         // ToDo - 붙잡힌 플레이어 탈출 조건 정할 것
-        isGrapping = isGrapping != true;
-        animator.SetBool(AnimatorVar.isGrapping.ToString(), isGrapping);
+        isGrabbing = (isGrabbing != true);
+        animator.SetBool(AnimatorVar.isGrabbing.ToString(), isGrabbing);
 
     }
     #endregion

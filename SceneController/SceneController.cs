@@ -20,20 +20,21 @@ public class SceneController : MonoBehaviour
 
     public enum SceneIndex
     {
-        LOADING = 0,
-        TITLE,
-        LOBBY,
-        PLAYER,
-        STAGE_RUN_01,
-        STAGE_RUN_02,
-        STAGE_RUN_03,
-        STAGE_SURVIVE_01
+        Loading = 0,
+        Title,
+        Lobby,
+        Player,
+        Stage_Run_01,
+        Stage_Run_02,
+        Stage_Run_03,
+        Stage_Survival_01,
+        Result
     }
 
     // Build Index 상의 첫번째 스테이지와 마지막 스테이지
     // 스테이지 씬 추가 혹은 순서 변경 시 수정 요망
-    int firstStageIdx = Convert.ToInt32(SceneIndex.STAGE_RUN_01);
-    int lastStageIdx = Convert.ToInt32(SceneIndex.STAGE_SURVIVE_01);
+    int firstStageIdx = Convert.ToInt32(SceneIndex.Stage_Run_01);
+    int lastStageIdx = Convert.ToInt32(SceneIndex.Result);
     public int FirstStageIdx { get { return firstStageIdx; } }
     public int LastStageIdx { get { return lastStageIdx; } }
 
@@ -45,13 +46,13 @@ public class SceneController : MonoBehaviour
 
     void Start()
     {
-        SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.TITLE), LoadSceneMode.Additive);
+        SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.Title), LoadSceneMode.Additive);
     }
 
     // 로비 입장 버튼
     public void EnterLobby()
     {
-        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.TITLE));
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Title));
         // 서버 연결 요청
         NetworkManager.Instance.ConnectToServer();
     }
@@ -66,7 +67,7 @@ public class SceneController : MonoBehaviour
     public void LoadLobby()
     {
         if (SceneManager.GetActiveScene()
-            != SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.LOBBY)))
+            != SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.Lobby)))
             StartCoroutine(LoadingLobby());
     }
 
@@ -75,7 +76,7 @@ public class SceneController : MonoBehaviour
     {
         curStageIdx = stageIdx;
         loadingScreen.SetActive(true);
-        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.LOBBY));
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Lobby));
         StartCoroutine(LoadingStage());
     }
     // 랜덤 스테이지 입장용
@@ -83,27 +84,36 @@ public class SceneController : MonoBehaviour
     {
         return Random.Range(firstStageIdx, lastStageIdx + 1);
     }
-
+    // 스테이지 종료
+    // 플레이어 및 스테이지 씬 언로드, 결과 씬 로드
     public void ExitStage()
     {
         loadingScreen.SetActive(true);
         SceneManager.UnloadSceneAsync(curStageIdx);
-        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.PLAYER));
-        SceneManager.LoadScene(Convert.ToInt32(SceneIndex.LOBBY), LoadSceneMode.Additive);
-        loadingScreen.SetActive(false);
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Player));
+
+        StartCoroutine(LoadingScene(Convert.ToInt32(SceneIndex.Result))); 
+    }
+
+    public void BackToLobby()
+    {
+        loadingScreen.SetActive(true);
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Result));
+
+        StartCoroutine(LoadingScene(Convert.ToInt32(SceneIndex.Lobby)));
     }
 
     IEnumerator LoadingLobby()
     {
         //로비 씬 로드 대기
-        AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.LOBBY), LoadSceneMode.Additive);
+        AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.Lobby), LoadSceneMode.Additive);
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
         loadingScreen.SetActive(false);
         loadingCamera.SetActive(false);
-        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.LOBBY)));
+        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.Lobby)));
     }
 
     // 입장하는 스테이지를 LoadSceneAsync로 로딩하며 AsyncOperation 변수에 저장
@@ -111,7 +121,7 @@ public class SceneController : MonoBehaviour
     IEnumerator LoadingStage()
     {
         //플레이어 씬 로드 대기
-        AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.PLAYER), LoadSceneMode.Additive);
+        AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.Player), LoadSceneMode.Additive);
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
@@ -124,6 +134,19 @@ public class SceneController : MonoBehaviour
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
         
+        loadingScreen.SetActive(false);
+    }
+
+    IEnumerator LoadingScene(int sceneIdx)
+    {
+        // 씬 로드 대기
+        AsyncOperation op = SceneManager.LoadSceneAsync((sceneIdx), LoadSceneMode.Additive);
+        while (!op.isDone)
+        {
+            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
+        }
+        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneIdx));
+
         loadingScreen.SetActive(false);
     }
 }
