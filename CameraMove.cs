@@ -56,7 +56,8 @@ public class CameraMove : MonoBehaviour
     void OnLook(InputValue value)
     {
         // 타겟이 없거나 회전 불가능할 경우 패스
-        if (target == null || !canRotate) return;
+        if (target == null || !canRotate) 
+            return;
 
         curLookVec = value.Get<Vector2>();
         // 저장된 이전 값이 없다면 저장하고 패스
@@ -84,11 +85,6 @@ public class CameraMove : MonoBehaviour
         // y축 기준 회전
         transform.RotateAround(target.position, Vector3.up, xOffset);
         cameraOffset.RotateAround(Vector3.zero, Vector3.up, xOffset);
-
-        // rigidbody를 이용한 roateAround
-        //Quaternion q = Quaternion.AngleAxis(orbitSpeed, transform.forward);
-        //rb.MovePosition(q * (rb.transform.position - target.position) + target.position);
-        //rb.MoveRotation(rb.transform.rotation * q);
 
         // z축 회전 제한
         if (transform.eulerAngles.z != 0)

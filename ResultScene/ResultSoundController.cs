@@ -3,17 +3,18 @@ using UnityEngine;
 public class ResultSoundController : MonoBehaviour
 {
     AudioSource audioSource;
-    [SerializeField] AudioClip resultBgm;
+    [SerializeField] AudioClip winnerBgm;
+    [SerializeField] AudioClip loserBgm;
 
     void Awake()
     {
         audioSource = GetComponent<AudioSource>();
     }
 
-    void Start()
+    public void StartBgm(bool isWinner)
     {
         audioSource.loop = true;
-        audioSource.clip = resultBgm;
+        audioSource.clip = isWinner ? winnerBgm : loserBgm;
         audioSource.Play();
     }
 }

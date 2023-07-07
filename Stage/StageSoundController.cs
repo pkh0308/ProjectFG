@@ -10,32 +10,34 @@ public class StageSoundController : MonoBehaviour
     //재생 함수 호출용 열거형
     public enum StageBgm 
     { 
-        stopBgm = -1,
-        stageBgm = 1000
+        StopBgm = -1,
+        StageBgm = 1000
     }
     // sfx 함수 호출용 열거형
     public enum StageSfx 
     {
-        jump = 2000,
-        savePoint,
-        reset,
-        stageClear,
-        gameOver
+        Jump = 2000,
+        JumpingPlatform,
+        SavePoint,
+        Reset,
+        StageClear,
+        GameOver
     }
 
     //bgm
     [Header("Bgm")]
     [SerializeField] AudioClip stageBgm;
-    public static Action<int> PlayBgm;
+    public static Action<StageBgm> PlayBgm;
 
     //sfx
     [Header("Sfx")]
     [SerializeField] AudioClip jump;
+    [SerializeField] AudioClip jumpingPlatform;
     [SerializeField] AudioClip savePoint;
     [SerializeField] AudioClip reset;
     [SerializeField] AudioClip stageClear;
     [SerializeField] AudioClip gameOver;
-    public static Action<int> PlaySfx;
+    public static Action<StageSfx> PlaySfx;
 
     void Awake()
     {
@@ -57,19 +59,19 @@ public class StageSoundController : MonoBehaviour
         foreach (AudioSource sfx in sfxAudioSources)
             sfx.loop = false;
 
-        Play_Bgm((int)StageBgm.stageBgm);
+        Play_Bgm(StageBgm.StageBgm);
     }
 
     // bgm 플레이용 함수
     // StageBgm.stopBgm 으로 정지
-    public void Play_Bgm(int idx)
+    public void Play_Bgm(StageBgm idx)
     {
         switch (idx)
         {
-            case (int)StageBgm.stopBgm:
+            case StageBgm.StopBgm:
                 bgmAudioSource.Stop();
                 break;
-            case (int)StageBgm.stageBgm:
+            case StageBgm.StageBgm:
                 bgmAudioSource.clip = stageBgm;
                 bgmAudioSource.Play();
                 break;
@@ -80,7 +82,7 @@ public class StageSoundController : MonoBehaviour
         }
     }
 
-    public void Play_Sfx(int idx)
+    public void Play_Sfx(StageSfx idx)
     {
         //재생중이지 않은 오디오 소스 선택
         for (int i = 0; i < sfxAudioSources.Length; i++)
@@ -96,24 +98,28 @@ public class StageSoundController : MonoBehaviour
 
         switch (idx)
         {
-            case (int)StageSfx.jump:
+            case StageSfx.Jump:
                 curSfxSource.clip = jump;
                 curSfxSource.Play();
                 break;
-            case (int)StageSfx.savePoint:
+            case StageSfx.JumpingPlatform:
+                curSfxSource.clip = jump;
+                curSfxSource.Play();
+                break;
+            case StageSfx.SavePoint:
                 curSfxSource.clip = savePoint;
                 curSfxSource.Play();
                 break;
-            case (int)StageSfx.reset:
+            case StageSfx.Reset:
                 curSfxSource.clip = reset;
                 curSfxSource.Play();
                 break;
-            case (int)StageSfx.stageClear:
+            case StageSfx.StageClear:
                 bgmAudioSource.Stop();
                 curSfxSource.clip = stageClear;
                 curSfxSource.Play();
                 break;
-            case (int)StageSfx.gameOver:
+            case StageSfx.GameOver:
                 bgmAudioSource.Stop();
                 curSfxSource.clip = gameOver;
                 curSfxSource.Play();

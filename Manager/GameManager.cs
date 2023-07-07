@@ -105,8 +105,7 @@ public class GameManager : MonoBehaviour
     [PunRPC]
     void EnterRandomStage(int stageIdx)
     {
-        //SceneController.Instance.EnterStage(stageIdx);
-        SceneController.Instance.EnterStage(6);
+        SceneController.Instance.EnterStage(stageIdx);
     }
 
     public void PlayerReady()
@@ -152,8 +151,8 @@ public class GameManager : MonoBehaviour
         isWinner = true;
         StopCoroutine(timerRoutine);
 
-        StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
-        StageSoundController.PlaySfx((int)StageSoundController.StageSfx.stageClear);
+        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
+        StageSoundController.PlaySfx(StageSoundController.StageSfx.StageClear);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ResultOn();
@@ -177,8 +176,8 @@ public class GameManager : MonoBehaviour
         this.isWinner = isWinner;
         StopCoroutine(timerRoutine);
 
-        StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
-        StageSoundController.PlaySfx((int)StageSoundController.StageSfx.stageClear);
+        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
+        StageSoundController.PlaySfx(StageSoundController.StageSfx.StageClear);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ResultOn(isWinner);
@@ -196,6 +195,7 @@ public class GameManager : MonoBehaviour
         isWinner = false;
         isPaused = false;
         stageReadyCount = 0;
+        curSurvivors = 0;
     }
     #endregion
 
@@ -221,9 +221,10 @@ public class GameManager : MonoBehaviour
     {
         // 일시정지
         isPaused = true;
+        this.isWinner = isWinner;
 
-        StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
-        StageSoundController.PlaySfx((int)StageSoundController.StageSfx.stageClear);
+        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
+        StageSoundController.PlaySfx(StageSoundController.StageSfx.StageClear);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ResultOn(isWinner);
@@ -232,13 +233,6 @@ public class GameManager : MonoBehaviour
 
         // 로비 이동 및 룸 나가기
         SceneController.Instance.ExitStage();
-        NetworkManager.Instance.LeaveRoom();
-
-        // 일시정지 및 변수 초기화
-        isPaused = false;
-        curSurvivors = 0;
-        stageReadyCount = 0;
-        isOver = false;
     }
     #endregion
 
@@ -252,7 +246,8 @@ public class GameManager : MonoBehaviour
         
         // 로비 이동
         SceneController.Instance.ExitStage();
-        curMode = GameMode.Lobby;
+        if(curMode == GameMode.SingleGame)
+            curMode = GameMode.Lobby;
 
         // 일시정지 및 변수 초기화
         isPaused = false;
@@ -287,8 +282,8 @@ public class GameManager : MonoBehaviour
         isPaused = true;
         isWinner = false;
 
-        StageSoundController.PlayBgm((int)StageSoundController.StageBgm.stopBgm);
-        StageSoundController.PlaySfx((int)StageSoundController.StageSfx.gameOver);
+        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
+        StageSoundController.PlaySfx(StageSoundController.StageSfx.GameOver);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ActiveTimeOutSet(true);

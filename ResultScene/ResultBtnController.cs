@@ -8,8 +8,8 @@ public class ResultBtnController : MonoBehaviour
         if(NetworkManager.Instance.InRoom)
         {
             // 로비 이동 및 룸 나가기
-            SceneController.Instance.BackToLobby();
             NetworkManager.Instance.LeaveRoom();
+            SceneController.Instance.BackToLobby();
         }
         // 싱글 게임
         else

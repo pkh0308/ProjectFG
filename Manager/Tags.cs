@@ -21,4 +21,5 @@ public static class Tags
     public readonly static string Goal = "Goal";
     public readonly static string OutArea = "OutArea";
     public readonly static string Obstacle = "Obstacle";
+    public readonly static string JumpingPlatform = "JumpingPlatform";
 }
