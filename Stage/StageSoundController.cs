@@ -103,7 +103,7 @@ public class StageSoundController : MonoBehaviour
                 curSfxSource.Play();
                 break;
             case StageSfx.JumpingPlatform:
-                curSfxSource.clip = jump;
+                curSfxSource.clip = jumpingPlatform;
                 curSfxSource.Play();
                 break;
             case StageSfx.SavePoint:

@@ -64,6 +64,9 @@ public class StageController : MonoBehaviour
 
     void Start()
     {
+        // 로딩 스크린 해제
+        SceneController.Instance.LoadingScreenOff();
+
         // 현재 스테이지를 액티브 씬으로 설정 후 캐릭터 생성
         SceneController.Instance.SetActiveScene();
         // null을 반환받았을 경우 예외 발생시킴
@@ -133,17 +136,7 @@ public class StageController : MonoBehaviour
             Camera.main.GetComponent<CameraMove>().SetRotation(
                 startPos[NetworkManager.Instance.GetMyIdx()].eulerAngles.y);
 
-        // 싱글 플레이 시 바로 카운트다운 시작
-        // 멀티플레이일 경우 준비된 유저 카운트
-        if (isSingleGame)
-            UiController.Instance.StartCountDown();
-        else
-            PV.RPC(nameof(Ready), RpcTarget.All);
-    }
-
-    [PunRPC]
-    protected void Ready()
-    {
-        GameManager.Instance.PlayerReady();
+        // 카운트다운 시작
+        UiController.Instance.StartCountDown();
     }
 }

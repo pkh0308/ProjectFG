@@ -93,26 +93,8 @@ public class GameManager : MonoBehaviour
         curMode = GameMode.MultiGame;
         isPaused = true;
         curSurvivors = NetworkManager.Instance.CurUsers;
-        // 마스터 클라이언트에서 실행
-        // 랜덤 스테이지 인덱스로 입장(RPC)
-        if (NetworkManager.Instance.IsMaster)
-        {
-            int idx = SceneController.Instance.GetRandomStageIdx();
-            PV.RPC(nameof(EnterRandomStage), RpcTarget.All, idx);
-        }
-    }
-
-    [PunRPC]
-    void EnterRandomStage(int stageIdx)
-    {
-        SceneController.Instance.EnterStage(stageIdx);
-    }
-
-    public void PlayerReady()
-    {
-        stageReadyCount++;
-        if(stageReadyCount == NetworkManager.Instance.CurUsers)
-            UiController.Instance.StartCountDown();
+        
+        SceneController.Instance.EnterRandomStage();
     }
     #endregion
 

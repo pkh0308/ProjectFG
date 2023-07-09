@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 // System.Random과 혼선 방지용
 using Random = UnityEngine.Random;
+using PN = Photon.Pun.PhotonNetwork;
 
 public class SceneController : MonoBehaviour
 {
@@ -77,10 +78,29 @@ public class SceneController : MonoBehaviour
         curStageIdx = stageIdx;
         loadingScreen.SetActive(true);
         SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Lobby));
-        StartCoroutine(LoadingStage());
+        
+        // 싱글 게임
+        if(!NetworkManager.Instance.InRoom)
+            StartCoroutine(LoadingStage());
+        // 멀티 게임(마스터 클라이언트만 호출)
+        if (PN.IsMasterClient)
+            StartCoroutine(LoadingStage_Network());
+    }
+    public void EnterRandomStage()
+    {
+        curStageIdx = GetRandomStageIdx();
+        loadingScreen.SetActive(true);
+        SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Lobby));
+
+        // 싱글 게임
+        if (!NetworkManager.Instance.InRoom)
+            StartCoroutine(LoadingStage());
+        // 멀티 게임(마스터 클라이언트만 호출)
+        if (PN.IsMasterClient)
+            StartCoroutine(LoadingStage_Network());
     }
     // 랜덤 스테이지 입장용
-    public int GetRandomStageIdx()
+    int GetRandomStageIdx()
     {
         return Random.Range(firstStageIdx, lastStageIdx + 1);
     }
@@ -126,7 +146,6 @@ public class SceneController : MonoBehaviour
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
         }
-
         //스테이지 씬 로드 대기
         op = SceneManager.LoadSceneAsync(curStageIdx, LoadSceneMode.Additive);
         while (!op.isDone)
@@ -135,6 +154,22 @@ public class SceneController : MonoBehaviour
         }
         
         loadingScreen.SetActive(false);
+    }
+
+    IEnumerator LoadingStage_Network()
+    {
+        //플레이어 씬 로드 대기
+        AsyncOperation op = PN.AsyncLoadLevel(Convert.ToInt32(SceneIndex.Player));
+        while (!op.isDone)
+        {
+            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
+        }
+        //스테이지 씬 로드 대기
+        op = PN.AsyncLoadLevel(curStageIdx);
+        while (!op.isDone)
+        {
+            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
+        }
     }
 
     IEnumerator LoadingScene(int sceneIdx)
@@ -147,6 +182,11 @@ public class SceneController : MonoBehaviour
         }
         SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneIdx));
 
+        loadingScreen.SetActive(false);
+    }
+
+    public void LoadingScreenOff()
+    {
         loadingScreen.SetActive(false);
     }
 }

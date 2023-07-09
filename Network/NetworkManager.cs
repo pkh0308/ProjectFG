@@ -29,6 +29,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         //기본값 60, 30 에서 절반으로 낮춤
         PN.SendRate = 30;
         PN.SerializationRate = 15;
+
+        // LoadLevel()을 위해 true로 설정
+        PN.AutomaticallySyncScene = true;
     }
 
     // 서버 연결
