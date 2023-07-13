@@ -64,9 +64,8 @@ public class StageController : MonoBehaviour
 
     void Start()
     {
-        // 로딩 스크린 해제
-        SceneController.Instance.LoadingScreenOff();
-
+        // 로딩 스크린 및 씬 동기화 해제
+        SceneController.Instance.LoadingCompleted();
         // 현재 스테이지를 액티브 씬으로 설정 후 캐릭터 생성
         SceneController.Instance.SetActiveScene();
         // null을 반환받았을 경우 예외 발생시킴

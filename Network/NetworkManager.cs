@@ -29,9 +29,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         //기본값 60, 30 에서 절반으로 낮춤
         PN.SendRate = 30;
         PN.SerializationRate = 15;
-
-        // LoadLevel()을 위해 true로 설정
-        PN.AutomaticallySyncScene = true;
     }
 
     // 서버 연결
@@ -105,14 +102,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 로비일 경우(멀티 대기중에 퇴장 시) 대기 UI 비활성화
     public override void OnLeftRoom()
     {
+        // 멀티 게임 종료하면서 방 퇴장
+        // 상태값 변경 (MultiGame -> Lobby) 
         if (GameManager.Instance.CurMode != GameManager.GameMode.Lobby)
-        {
             GameManager.Instance.SetMode(GameManager.GameMode.Lobby);
-            return;
-        }  
-
+        // 멀티 게임 대기중에 퇴장
         // 대기 UI 비활성화
-        LobbyUIController.Instance.MultiWaitSetOff();
+        else
+            LobbyUIController.Instance.MultiWaitSetOff();
     }
     #endregion
 
@@ -143,18 +140,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #endregion
 
     #region 멀티플레이 
-    // 채팅방 퇴장 및 멀티방 입장
-    // 멀티방 입장은 OnLeftRoom()에서 처리
+    // 멀티플레이 방 입장
     public void EnterRoom()
     {
-        // 방이 있다면 랜덤 입장, 없다면 생성
         // 최대 인원수 2인 방에 참가, 없다면 최대 인원수 2인 방 생성
         PN.JoinRandomOrCreateRoom(
             expectedMaxPlayers: 2,
             roomOptions: new RoomOptions() { MaxPlayers = 2 });
     }
-    // 멀티플레이 대기 방 퇴장
-    // 퇴장 완료 후 채팅방 재입장
+    // 멀티플레이 방 퇴장
     public void LeaveRoom()
     {
         // 퇴장 시 curReadyUsers는 0으로 초기화

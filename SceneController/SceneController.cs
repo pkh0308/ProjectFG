@@ -71,6 +71,10 @@ public class SceneController : MonoBehaviour
             != SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.Lobby)))
             StartCoroutine(LoadingLobby());
     }
+    public void SetStageIdx(int stageIdx)
+    {
+        curStageIdx = stageIdx;
+    }
 
     //스테이지 입장 시
     public void EnterStage(int stageIdx)
@@ -86,9 +90,13 @@ public class SceneController : MonoBehaviour
         if (PN.IsMasterClient)
             StartCoroutine(LoadingStage_Network());
     }
+    // 랜덤 스테이지 입장
+    // stageIdx는 SetStageIdx로 미리 설정(RPC로 호출)
     public void EnterRandomStage()
     {
-        curStageIdx = GetRandomStageIdx();
+        // LoadLevel()을 위해 true로 설정
+        PN.AutomaticallySyncScene = true;
+
         loadingScreen.SetActive(true);
         SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Lobby));
 
@@ -100,9 +108,9 @@ public class SceneController : MonoBehaviour
             StartCoroutine(LoadingStage_Network());
     }
     // 랜덤 스테이지 입장용
-    int GetRandomStageIdx()
+    public int GetRandomStageIdx()
     {
-        return Random.Range(firstStageIdx, lastStageIdx + 1);
+        return Random.Range(firstStageIdx, lastStageIdx);
     }
     // 스테이지 종료
     // 플레이어 및 스테이지 씬 언로드, 결과 씬 로드
@@ -156,10 +164,12 @@ public class SceneController : MonoBehaviour
         loadingScreen.SetActive(false);
     }
 
+    // 멀티 게임용 로딩 코루틴
+    // AsyncOperation을 반환하도록 새로 작성한 AsyncLoadLevel() 사용
     IEnumerator LoadingStage_Network()
     {
         //플레이어 씬 로드 대기
-        AsyncOperation op = PN.AsyncLoadLevel(Convert.ToInt32(SceneIndex.Player));
+        AsyncOperation op = PN.AsyncLoadLevel(Convert.ToInt32(SceneIndex.Player)); 
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
@@ -185,8 +195,11 @@ public class SceneController : MonoBehaviour
         loadingScreen.SetActive(false);
     }
 
-    public void LoadingScreenOff()
+    // StageController에서 호출(Start())
+    // 로딩 스크린 해제 및 씬 동기화 해제
+    public void LoadingCompleted()
     {
         loadingScreen.SetActive(false);
+        PN.AutomaticallySyncScene = false;
     }
 }

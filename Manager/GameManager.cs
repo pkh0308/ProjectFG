@@ -93,8 +93,19 @@ public class GameManager : MonoBehaviour
         curMode = GameMode.MultiGame;
         isPaused = true;
         curSurvivors = NetworkManager.Instance.CurUsers;
-        
+
+        if (NetworkManager.Instance.IsMaster)
+        {
+            int stageIdx = SceneController.Instance.GetRandomStageIdx();
+            PV.RPC(nameof(SetStageIdx), RpcTarget.All, stageIdx);
+        }
         SceneController.Instance.EnterRandomStage();
+    }
+    // 스테이지 인덱스 설정용
+    [PunRPC]
+    void SetStageIdx(int randIdx)
+    {
+        SceneController.Instance.SetStageIdx(randIdx);
     }
     #endregion
 
@@ -167,6 +178,8 @@ public class GameManager : MonoBehaviour
         UiController.Instance.ResultOff();
 
         // 결과 화면으로 이동
+        // 로비 이동 및 룸 나가기
+        NetworkManager.Instance.LeaveRoom();
         SceneController.Instance.ExitStage();
     }
 
@@ -188,15 +201,18 @@ public class GameManager : MonoBehaviour
         UiController.Instance.ResultOn(false);
         UiController.Instance.MinusUserCount();
 
-        PV.RPC(nameof(Survive_Minus), RpcTarget.All);
+        PV.RPC(nameof(Survive_Minus), RpcTarget.Others);
+        // 패배 처리
+        StartCoroutine(Survive_MultiGame(false));
     }
 
     [PunRPC]
     void Survive_Minus()
     {
-        curSurvivors--;
-        if(curSurvivors <= 1)
-            StartCoroutine(Survive_MultiGame(!isOver)); // 게임오버 여부 반전해서 전달
+        curSurvivors--; Debug.Log(curSurvivors);
+        // 최종 생존자일 경우 승리 연출로 이행
+        if (curSurvivors <= 1 && !isOver)
+            StartCoroutine(Survive_MultiGame(true));
     }
 
     IEnumerator Survive_MultiGame(bool isWinner)
@@ -214,19 +230,24 @@ public class GameManager : MonoBehaviour
         UiController.Instance.ResultOff();
 
         // 로비 이동 및 룸 나가기
-        SceneController.Instance.ExitStage();
+        NetworkManager.Instance.LeaveRoom();
+        SceneController.Instance.ExitStage(); 
     }
     #endregion
 
     #region 중도 퇴장
     public void PlayerExit()
     {
+        //타이머 정지
+        StopCoroutine(timerRoutine);
+
         // 멀티 시 처리
         // 나머지 플레이어들에게 생존자 -1 카운트
         if(curMode == GameMode.MultiGame)
             PV.RPC(nameof(Survive_Minus), RpcTarget.Others);
-        
-        // 로비 이동
+
+        // 로비 이동 및 룸 나가기
+        NetworkManager.Instance.LeaveRoom();
         SceneController.Instance.ExitStage();
         if(curMode == GameMode.SingleGame)
             curMode = GameMode.Lobby;
