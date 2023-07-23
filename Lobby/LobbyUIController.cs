@@ -10,10 +10,11 @@ public class LobbyUIController : MonoBehaviour
 {
     [SerializeField] LobbyModel lobbyModel;
 
-    [Header("User Name")]
-    [SerializeField] GameObject nameEditSet;
+    [Header("User Info")]
+    [SerializeField] GameObject userInfoSet;
     [SerializeField] TextMeshProUGUI userNameText;
-    [SerializeField] TMP_InputField nameField;
+    [SerializeField] TextMeshProUGUI userInfoNameText;
+    [SerializeField] TextMeshProUGUI winRateText;
     string myName;
 
     [Header("Single Play")]
@@ -62,7 +63,7 @@ public class LobbyUIController : MonoBehaviour
         
         curChatIdx = -1;
         curChatTime = 0;
-        myName = NetworkManager.Instance.MyName;
+        myName = GameManager.Instance.MyName;
         userNameText.text = myName;
 
         // 스테이지 정보 읽어오기
@@ -99,22 +100,24 @@ public class LobbyUIController : MonoBehaviour
     }
     #endregion
 
-    #region 유저 네임 변경
-    public void NameEditSet()
+    #region 유저 데이터
+    public void UserInfoSet()
     {
-        nameEditSet.SetActive(!nameEditSet.activeSelf);
+        if (!userInfoSet.activeSelf)
+            UserInfoUpdate();
+
+        userInfoSet.SetActive(!userInfoSet.activeSelf);
     }
 
-    public void EditUserName()
+    void UserInfoUpdate()
     {
-        // 입력란이 공백이 아니라면 수정
-        if (nameField.text.Trim() != "")
-        {
-            myName = nameField.text;
-            userNameText.text = myName;
-            NetworkManager.Instance.SaveMyName(myName);
-        }
-        nameEditSet.SetActive(false);
+        userInfoNameText.text = myName;
+
+        int[] arr = new int[2];
+        DBManager.Instance.GetWinRateData(myName, arr, out float winRate);
+        string winRateStr = winRate > 0 ? string.Format("{0:0.00}", winRate) : "-";
+        // 0 : 승수, 1 : 패배수, 2 : 승률
+        winRateText.text = $"Win : {arr[0]}\nLoose : {arr[1]}\n승률 : {winRateStr}%";
     }
     #endregion
 

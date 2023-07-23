@@ -19,6 +19,11 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
+    // 유저 네임
+    string myName = null;
+    public string MyName { get { return myName; } }
+    public void SaveMyName(string name) { myName = name; }
+
     // 시간 관련
     [SerializeField] float goalInInterval;
     [SerializeField] float timeOutInterval;
@@ -154,6 +159,9 @@ public class GameManager : MonoBehaviour
 
         // 결과 화면으로 이동
         SceneController.Instance.ExitStage();
+
+        // 승리 카운트
+        DBManager.Instance.WinCountUpdate(myName, true);
     }
 
     [PunRPC]
@@ -181,6 +189,9 @@ public class GameManager : MonoBehaviour
         // 로비 이동 및 룸 나가기
         NetworkManager.Instance.LeaveRoom();
         SceneController.Instance.ExitStage();
+
+        // 승패 카운트
+        DBManager.Instance.WinCountUpdate(myName, isWinner);
     }
 
     // 결과 화면 퇴장 시 호출
@@ -231,7 +242,10 @@ public class GameManager : MonoBehaviour
 
         // 로비 이동 및 룸 나가기
         NetworkManager.Instance.LeaveRoom();
-        SceneController.Instance.ExitStage(); 
+        SceneController.Instance.ExitStage();
+
+        // 승패 카운트
+        DBManager.Instance.WinCountUpdate(myName, isWinner);
     }
     #endregion
 
@@ -247,10 +261,15 @@ public class GameManager : MonoBehaviour
             PV.RPC(nameof(Survive_Minus), RpcTarget.Others);
 
         // 로비 이동 및 룸 나가기
-        NetworkManager.Instance.LeaveRoom();
+        if (curMode == GameMode.MultiGame)
+            NetworkManager.Instance.LeaveRoom();
+
         SceneController.Instance.ExitStage();
         if(curMode == GameMode.SingleGame)
             curMode = GameMode.Lobby;
+
+        // 중도 퇴장은 패배로 처리
+        DBManager.Instance.WinCountUpdate(myName, false);
 
         // 일시정지 및 변수 초기화
         isPaused = false;

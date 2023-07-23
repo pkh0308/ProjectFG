@@ -11,13 +11,9 @@ public class LobbyBtnController : MonoBehaviour
     }
 
     // 유저 네임 변경
-    public void Btn_NameEditSet()
+    public void Btn_UserInfoSet()
     {
-        LobbyUIController.Instance.NameEditSet();
-    }
-    public void Btn_NameEdit()
-    {
-        LobbyUIController.Instance.EditUserName();
+        LobbyUIController.Instance.UserInfoSet();
     }
 
     // 싱글플레이

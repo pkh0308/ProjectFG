@@ -20,18 +20,26 @@ public class TitleController : MonoBehaviour
     [SerializeField] GameObject notificationSet;
     [SerializeField] TextMeshProUGUI notificationText;
 
+    void Start()
+    {
+        // 비밀번호 타입으로 변경
+        logIn_pwdField.contentType = TMP_InputField.ContentType.Password;
+        create_pwdField.contentType = TMP_InputField.ContentType.Password;
+    }
+
     #region 로그인
     // 로그인 창 열기/닫기
     public void Btn_logInSet(bool value)
     {
-        // 활성화 전에 텍스트 초기화
-        if(value)
+        logInSet.SetActive(value);
+
+        // 텍스트 초기화
+        if (value)
         {
             logIn_IDField.text = "";
             logIn_pwdField.text = "";
+            logIn_IDField.ActivateInputField();
         }
-
-        logInSet.SetActive(value);
     }
     // 로그인 시도
     public void Btn_LogIn()
@@ -54,14 +62,15 @@ public class TitleController : MonoBehaviour
     // 계정 생성 창 열기/닫기
     public void Btn_CreateSet(bool value)
     {
-        // 활성화 전에 텍스트 초기화
+        createAccountSet.SetActive(value);
+
+        // 텍스트 초기화
         if (value)
         {
             create_IDField.text = "";
             create_pwdField.text = "";
+            create_IDField.ActivateInputField();
         }
-
-        createAccountSet.SetActive(value);
     }
     // 계정 생성 시도
     public void Btn_CreateAccount()
@@ -83,7 +92,10 @@ public class TitleController : MonoBehaviour
 
         // 계정 생성 성공
         if(DBManager.Instance.CreateAccount(create_IDField.text, create_pwdField.text))
+        {
             notificationText.text = "계정 생성에 성공하였습니다!";
+            createAccountSet.SetActive(false);
+        }
         // 계정 생성 실패
         else
             notificationText.text = "이미 존재하는 ID입니다.";
@@ -92,9 +104,38 @@ public class TitleController : MonoBehaviour
     }
     #endregion
 
+    #region 유저 입력
+    // Tab 입력
+    void OnTab()
+    {
+        // 로그인 창 오픈 + ID 입력칸 선택 상태
+        if(logInSet.activeSelf && logIn_IDField.isFocused)
+            logIn_pwdField.ActivateInputField();
+        // 계정 생성 창 오픈 + ID 입력칸 선택 상태
+        else if(createAccountSet.activeSelf && create_IDField.isFocused)
+            create_pwdField.ActivateInputField();
+    }
+
+    // Enter 입력
+    void OnEnter()
+    {
+        // 알림 창
+        if (notificationSet.activeSelf)
+            Btn_NotificationOff();
+        // 로그인 창
+        else if (logInSet.activeSelf)
+            Btn_LogIn();
+        // 계정 생성 창
+        else if (createAccountSet.activeSelf)
+            Btn_CreateAccount();
+    }
+    #endregion
+
+    #region 기타
     // 알림 창 닫기
     public void Btn_NotificationOff()
     {
         notificationSet.SetActive(false);
     }
+    #endregion
 }
