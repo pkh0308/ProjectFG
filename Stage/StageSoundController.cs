@@ -55,7 +55,10 @@ public class StageSoundController : MonoBehaviour
     void Start()
     {
         // loop 설정은 bgm은 true, sfx는 false로 설정
-        bgmAudioSource.loop = true;
+        bgmAudioSource.loop = true; 
+        
+        //ResourceManager.Instance.GetResource<AudioClip>(StageSfx.SavePoint.ToString(), (op) => { jump = op; });
+
         foreach (AudioSource sfx in sfxAudioSources)
             sfx.loop = false;
 

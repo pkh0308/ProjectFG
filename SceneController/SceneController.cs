@@ -69,7 +69,7 @@ public class SceneController : MonoBehaviour
     {
         if (SceneManager.GetActiveScene()
             != SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.Lobby)))
-            StartCoroutine(LoadingLobby());
+            LoadLobbyScene();
     }
     public void SetStageIdx(int stageIdx)
     {
@@ -85,7 +85,7 @@ public class SceneController : MonoBehaviour
         
         // 싱글 게임
         if(!NetworkManager.Instance.InRoom)
-            StartCoroutine(LoadingStage());
+            LoadPlayerScene();
         // 멀티 게임(마스터 클라이언트만 호출)
         if (PN.IsMasterClient)
             StartCoroutine(LoadingStage_Network());
@@ -102,7 +102,7 @@ public class SceneController : MonoBehaviour
 
         // 싱글 게임
         if (!NetworkManager.Instance.InRoom)
-            StartCoroutine(LoadingStage());
+            LoadPlayerScene();
         // 멀티 게임(마스터 클라이언트만 호출)
         if (PN.IsMasterClient)
             StartCoroutine(LoadingStage_Network());
@@ -120,7 +120,7 @@ public class SceneController : MonoBehaviour
         SceneManager.UnloadSceneAsync(curStageIdx);
         SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Player));
 
-        StartCoroutine(LoadingScene(Convert.ToInt32(SceneIndex.Result))); 
+        LoadingScene(Convert.ToInt32(SceneIndex.Result)); 
     }
 
     public void BackToLobby()
@@ -128,40 +128,53 @@ public class SceneController : MonoBehaviour
         loadingScreen.SetActive(true);
         SceneManager.UnloadSceneAsync(Convert.ToInt32(SceneIndex.Result));
 
-        StartCoroutine(LoadingScene(Convert.ToInt32(SceneIndex.Lobby)));
+        LoadingScene(Convert.ToInt32(SceneIndex.Lobby));
     }
 
-    IEnumerator LoadingLobby()
+    // 로비 씬 로드(비동기)
+    // 완료 후 로딩 씬 카메라 비활성화
+    void LoadLobbyScene()
     {
         //로비 씬 로드 대기
         AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.Lobby), LoadSceneMode.Additive);
-        while (!op.isDone)
+        op.completed += (operation) =>
         {
-            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
-        }
-        loadingScreen.SetActive(false);
-        loadingCamera.SetActive(false);
-        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.Lobby)));
+            SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(Convert.ToInt32(SceneIndex.Lobby)));
+            loadingCamera.SetActive(false);
+            loadingScreen.SetActive(false);
+        };
     }
 
-    // 입장하는 스테이지를 LoadSceneAsync로 로딩하며 AsyncOperation 변수에 저장
-    // 로딩이 끝날때까지 대기하다가 끝나면 로딩 스크린 해제
-    IEnumerator LoadingStage()
+    // 플레이어 씬 로드(비동기)
+    // 완료 후 스테이지 씬 로드(LoadStageScene())
+    void LoadPlayerScene()
     {
         //플레이어 씬 로드 대기
         AsyncOperation op = SceneManager.LoadSceneAsync(Convert.ToInt32(SceneIndex.Player), LoadSceneMode.Additive);
-        while (!op.isDone)
-        {
-            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
-        }
-        //스테이지 씬 로드 대기
-        op = SceneManager.LoadSceneAsync(curStageIdx, LoadSceneMode.Additive);
-        while (!op.isDone)
-        {
-            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
-        }
-        
-        loadingScreen.SetActive(false);
+        op.completed += (operation) => { LoadStageScene(); };
+    }
+
+    // 스테이지 씬 로드(비동기)
+    // 완료 후 로딩 스크린 해제
+    void LoadStageScene()
+    {
+        AsyncOperation op = SceneManager.LoadSceneAsync(curStageIdx, LoadSceneMode.Additive);
+        op.completed += (operation) => { loadingScreen.SetActive(false); };
+    }
+
+    // 플레이어 씬 로드(비동기)
+    // 완료 후 스테이지 씬 로드(LoadStageScene())
+    void LoadPlayerScene_Network()
+    {
+        AsyncOperation op = PN.AsyncLoadLevel(Convert.ToInt32(SceneIndex.Player));
+        op.completed += (operation) => { LoadStageScene_Network(); };
+    }
+
+    // 스테이지 씬 로드(비동기)
+    // 완료 후 로딩 스크린 해제
+    void LoadStageScene_Network()
+    {
+        AsyncOperation op = PN.AsyncLoadLevel(curStageIdx);
     }
 
     // 멀티 게임용 로딩 코루틴
@@ -173,7 +186,8 @@ public class SceneController : MonoBehaviour
         while (!op.isDone)
         {
             yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
-        }
+        }      
+
         //스테이지 씬 로드 대기
         op = PN.AsyncLoadLevel(curStageIdx);
         while (!op.isDone)
@@ -182,16 +196,16 @@ public class SceneController : MonoBehaviour
         }
     }
 
-    IEnumerator LoadingScene(int sceneIdx)
+    void LoadingScene(int sceneIdx)
     {
-        // 씬 로드 대기
+        // 씬 비동기 로드
         AsyncOperation op = SceneManager.LoadSceneAsync((sceneIdx), LoadSceneMode.Additive);
-        while (!op.isDone)
-        {
-            yield return WfsManager.Instance.GetWaitForSeconds(minInterval);
-        }
-        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneIdx));
+        op.completed += (operation) => { OnCompleted(sceneIdx); };
+    }
 
+    void OnCompleted(int sceneIdx)
+    {
+        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneIdx));
         loadingScreen.SetActive(false);
     }
 
