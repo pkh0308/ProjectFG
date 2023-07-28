@@ -71,6 +71,9 @@ public class StageController : MonoBehaviour
         // null을 반환받았을 경우 예외 발생시킴
         GameObject p = InstantiatePlayer() ?? throw new Exception("캐릭터 생성 실패");
 
+        // Bgm 실행
+        SoundManager.PlayBgm(SoundManager.Bgm.StageBgm);
+
         // 스테이지 보여주기 코루틴 실행
         initialPos = mainCamera.gameObject.transform.position;
         StartCoroutine(ShowStage(p.transform));

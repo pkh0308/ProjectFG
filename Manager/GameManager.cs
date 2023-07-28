@@ -149,8 +149,8 @@ public class GameManager : MonoBehaviour
         isWinner = true;
         StopCoroutine(timerRoutine);
 
-        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
-        StageSoundController.PlaySfx(StageSoundController.StageSfx.StageClear);
+        SoundManager.StopBgm();
+        SoundManager.PlaySfx(SoundManager.Sfx.StageClear);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ResultOn();
@@ -177,8 +177,8 @@ public class GameManager : MonoBehaviour
         this.isWinner = isWinner;
         StopCoroutine(timerRoutine);
 
-        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
-        StageSoundController.PlaySfx(StageSoundController.StageSfx.StageClear);
+        SoundManager.StopBgm();
+        SoundManager.PlaySfx(SoundManager.Sfx.StageClear);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ResultOn(isWinner);
@@ -232,8 +232,8 @@ public class GameManager : MonoBehaviour
         isPaused = true;
         this.isWinner = isWinner;
 
-        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
-        StageSoundController.PlaySfx(StageSoundController.StageSfx.StageClear);
+        SoundManager.StopBgm();
+        SoundManager.PlaySfx(SoundManager.Sfx.StageClear);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ResultOn(isWinner);
@@ -304,8 +304,8 @@ public class GameManager : MonoBehaviour
         isPaused = true;
         isWinner = false;
 
-        StageSoundController.PlayBgm(StageSoundController.StageBgm.StopBgm);
-        StageSoundController.PlaySfx(StageSoundController.StageSfx.GameOver);
+        SoundManager.StopBgm();
+        SoundManager.PlaySfx(SoundManager.Sfx.GameOver);
 
         // goalInInterval만큼 결과 UI 노출 후 해제
         UiController.Instance.ActiveTimeOutSet(true);

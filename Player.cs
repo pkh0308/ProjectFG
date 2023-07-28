@@ -181,7 +181,7 @@ public class Player : MonoBehaviour
         animator.SetBool(AnimatorVar.isJumping.ToString(), true);
         rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
         curState = CurState.IsJumping;
-        StageSoundController.PlaySfx(StageSoundController.StageSfx.Jump);
+        SoundManager.PlaySfx(SoundManager.Sfx.Jump);
     }
 
     void Slide()
@@ -189,7 +189,7 @@ public class Player : MonoBehaviour
         SetTrigger(AnimatorVar.doSlide.ToString());
         rigid.AddForce(moveVec.normalized * slidePower, ForceMode.Impulse);
         curState = CurState.IsSliding;
-        StageSoundController.PlaySfx(StageSoundController.StageSfx.Jump);
+        SoundManager.PlaySfx(SoundManager.Sfx.Jump);
     }
 
     // 마우스 좌클릭
@@ -230,7 +230,7 @@ public class Player : MonoBehaviour
         {
             transform.position = lastPos;
             rigid.velocity = Vector3.zero;
-            StageSoundController.PlaySfx(StageSoundController.StageSfx.Reset);
+            SoundManager.PlaySfx(SoundManager.Sfx.Reset);
             return;
         }
         // 저장위치 갱신
@@ -241,7 +241,7 @@ public class Player : MonoBehaviour
                 return;
 
             lastPos = savePos;
-            StageSoundController.PlaySfx(StageSoundController.StageSfx.SavePoint);
+            SoundManager.PlaySfx(SoundManager.Sfx.SavePoint);
             return;
         }
         // 골인 지점 도착
@@ -296,7 +296,7 @@ public class Player : MonoBehaviour
         // 사운드 출력만 플레이어에서 실행
         if (coll.gameObject.CompareTag(Tags.JumpingPlatform))
         {
-            StageSoundController.PlaySfx(StageSoundController.StageSfx.JumpingPlatform);
+            SoundManager.PlaySfx(SoundManager.Sfx.JumpingPlatform);
             return;
         }
     }
